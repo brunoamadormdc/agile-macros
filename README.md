@@ -62,6 +62,16 @@ npm run dev
 
 _O servidor rodará em `http://localhost:3001`_
 
+#### Importação de Dados (Obrigatório)
+
+Para que a busca de alimentos funcione, você deve popular o banco com a tabela TACO:
+
+```bash
+npm run import-taco
+```
+
+_(Veja `DATA_IMPORT_GUIDE.md` para mais detalhes)_
+
 ### 2. Web App (Aplicação Principal)
 
 ```bash

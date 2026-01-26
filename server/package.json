@@ -5,7 +5,8 @@
   "type": "commonjs",
   "scripts": {
     "dev": "nodemon src/server.js",
-    "start": "node src/server.js"
+    "start": "node src/server.js",
+    "import-taco": "node src/scripts/importTaco.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
