@@ -1,0 +1,3 @@
+***Agora que já temos o app criado, preciso que além de definição da meta semanal de calorias, a pessoa tbm possa inserir a meta semanal de carboidratos, gorduras e proteínas e essa meta vá sendo subtraída, conforme a pessoa vai adicionando os alimentos diariamente.***
+
+O saldo que aparece atualmente como o total de calorias na semana, tem que aparecer ao invés de por exemplo ***14000*** aparecer 14000 dividido pelos 7 dias da semana e ir subtraindo da média do dia, ficando positivo ou negativo conforme a pessoa for adicionando os alimentos, isso serve também pras metas de proteinas, gorduras e carboidratos. 
