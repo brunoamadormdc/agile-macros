@@ -50,7 +50,7 @@
                     <h3>Plus</h3>
                     <div class="price-block">
                         <span class="currency">R$</span>
-                        <span class="amount">59,90</span>
+                        <span class="amount">49,90</span>
                         <span class="period">/mês</span>
                     </div>
                     <p class="desc">Liberdade total com IA Ilimitada</p>

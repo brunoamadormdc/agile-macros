@@ -111,6 +111,46 @@
                             <p class="week-total">Meta Semanal: {{ Math.round(targetDaily * 7) }} kcal</p>
                         </div>
 
+                        <hr class="divider">
+
+                        <h3>Distribuição de Macros (g)</h3>
+                        <p class="subtitle" style="font-size: 0.8rem; margin-bottom: 1rem;">
+                            Personalize os valores abaixo. O app iniciou com uma sugestão base.
+                        </p>
+                        <div class="macro-inputs">
+                            <div class="macro-input-group">
+                                <label>Proteína (g)</label>
+                                <div class="input-with-result">
+                                    <input type="number" v-model.number="customMacros.p">
+                                    <span>{{ Math.round(customMacros.p * 4) }} kcal</span>
+                                </div>
+                            </div>
+                            <div class="macro-input-group">
+                                <label>Carboidrato (g)</label>
+                                <div class="input-with-result">
+                                    <input type="number" v-model.number="customMacros.c">
+                                    <span>{{ Math.round(customMacros.c * 4) }} kcal</span>
+                                </div>
+                            </div>
+                            <div class="macro-input-group">
+                                <label>Gordura (g)</label>
+                                <div class="input-with-result">
+                                    <input type="number" v-model.number="customMacros.f">
+                                    <span>{{ Math.round(customMacros.f * 9) }} kcal</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="summary-total">
+                            <p :class="{ 'text-danger': isOverTarget, 'text-success': !isOverTarget }">
+                                Total Calculado: {{ customKcal }} kcal
+                            </p>
+                            <p v-if="isOverTarget" class="warning-text">
+                                ⚠️ Atenção: A soma das macros excede a meta sugerida ({{ Math.round(targetDaily) }}
+                                kcal). O déficit pode ser comprometido.
+                            </p>
+                        </div>
+
                         <button class="btn full-width primary-action" @click="applyTarget">
                             Salvar Meta no Meu Plano
                         </button>
@@ -126,7 +166,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { useAuthStore } from '../stores/auth';
 import api from '../services/api';
 import { useToast } from 'vue-toastification';
@@ -183,14 +223,47 @@ const targetDaily = computed(() => {
     }
 });
 
+const customMacros = ref({
+    p: 0,
+    c: 0,
+    f: 0
+});
+
+// Initialize macros based on default split (40/35/25) when target changes
+watch(targetDaily, (newVal) => {
+    if (newVal > 0) {
+        customMacros.value = {
+            p: Math.round((newVal * 0.35) / 4),
+            c: Math.round((newVal * 0.40) / 4),
+            f: Math.round((newVal * 0.25) / 9)
+        };
+    }
+}, { immediate: true });
+
+const customKcal = computed(() => {
+    return Math.round(
+        (customMacros.value.p * 4) +
+        (customMacros.value.c * 4) +
+        (customMacros.value.f * 9)
+    );
+});
+
+const isOverTarget = computed(() => {
+    const diff = customKcal.value - targetDaily.value;
+    return diff > 50; // Tolerance of 50kcal
+});
+
 async function applyTarget() {
     try {
-        const weeklyKcal = Math.round(targetDaily.value * 7);
         await api.post('/api/targets/weekly', {
-            strategy: 'fixed_kcal',
-            kcal: weeklyKcal
+            strategy: 'daily_macros',
+            macros: {
+                protein_g: customMacros.value.p,
+                carbs_g: customMacros.value.c,
+                fat_g: customMacros.value.f
+            }
         });
-        toast.success('Meta atualizada com sucesso!');
+        toast.success('Meta de macros atualizada com sucesso!');
     } catch (err) {
         console.error(err);
         toast.error('Erro ao salvar meta.');
@@ -359,5 +432,67 @@ async function applyTarget() {
     .main-grid {
         grid-template-columns: 1fr;
     }
+}
+
+.macro-inputs {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.macro-input-group label {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    margin-bottom: 4px;
+    display: block;
+}
+
+.input-with-result {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.input-with-result input {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    text-align: center;
+    background: var(--color-bg-body);
+    color: var(--color-text-main);
+}
+
+.input-with-result span {
+    font-size: 0.8rem;
+    color: var(--color-text-main);
+    font-weight: 600;
+    text-align: center;
+}
+
+.summary-total {
+    font-size: 0.8rem;
+    text-align: right;
+    color: var(--color-text-muted);
+    margin-bottom: 1.5rem;
+}
+
+.text-danger {
+    color: var(--color-danger);
+    font-weight: 600;
+}
+
+.text-success {
+    color: var(--color-success) !important;
+    font-weight: 600;
+}
+
+.warning-text {
+    font-size: 0.8rem;
+    color: var(--color-warning);
+    /* Or similar color */
+    margin-top: 0.5rem;
+    font-weight: 500;
 }
 </style>

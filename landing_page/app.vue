@@ -322,7 +322,7 @@
           <div class="pricing-card focus">
             <div class="card-tag">Recomendado</div>
             <h3>Plus (Ilimitado)</h3>
-            <div class="price">R$ 59,90 <span>/mês</span></div>
+            <div class="price">R$ 49,90 <span>/mês</span></div>
             <ul class="benefits">
               <li>✅ <strong>IA ILIMITADA</strong> 🔥</li>
               <li>✅ Histórico Infinito</li>

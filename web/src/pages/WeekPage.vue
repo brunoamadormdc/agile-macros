@@ -6,20 +6,14 @@
     <div v-else-if="weekStore.weekSummary" class="stack">
       <section class="card">
         <h3>Meta semanal</h3>
-        
+
         <div class="tabs" style="margin-bottom: 1rem;">
-          <button 
-            type="button" 
-            :class="['tab', { active: targetStrategy === 'fixed_kcal' }]" 
-            @click="targetStrategy = 'fixed_kcal'"
-          >
+          <button type="button" :class="['tab', { active: targetStrategy === 'fixed_kcal' }]"
+            @click="targetStrategy = 'fixed_kcal'">
             Meta Fixa (Kcal)
           </button>
-          <button 
-            type="button" 
-            :class="['tab', { active: targetStrategy === 'daily_macros' }]" 
-            @click="targetStrategy = 'daily_macros'"
-          >
+          <button type="button" :class="['tab', { active: targetStrategy === 'daily_macros' }]"
+            @click="targetStrategy = 'daily_macros'">
             Meta por Macros
           </button>
         </div>
@@ -38,7 +32,8 @@
 
         <div v-else>
           <p class="muted" style="margin-bottom: 1rem;">
-            Defina suas metas <strong>diárias</strong> de macronutrientes. O sistema calculará a meta calórica semanal automaticamente.
+            Defina suas metas <strong>diárias</strong> de macronutrientes. O sistema calculará a meta calórica semanal
+            automaticamente.
           </p>
           <div class="grid-2" style="grid-template-columns: repeat(3, 1fr);">
             <label class="field">
@@ -54,7 +49,7 @@
               <input v-model.number="targetFat" type="number" min="0" />
             </label>
           </div>
-          <div class="card" style="background: #f1f5f9; border: none; margin-top: 1rem; padding: 1rem;">
+          <div class="card" style="background: var(--color-bg-body); border: none; margin-top: 1rem; padding: 1rem;">
             <p style="margin: 0; font-size: 0.9rem; color: var(--color-text-muted);">Estimativa:</p>
             <div style="display: flex; gap: 1rem; margin-top: 0.25rem;">
               <div><strong>{{ calculatedDailyKcal.toFixed(0) }}</strong> kcal/dia</div>
@@ -69,7 +64,7 @@
       </section>
 
       <WeekProjectionCard :week-summary="weekStore.weekSummary" />
-      
+
       <section class="card">
         <h3>Dia a dia</h3>
         <ul class="week-list">
@@ -127,7 +122,7 @@ async function loadTarget() {
     const data = await getWeeklyTarget();
     targetStrategy.value = data.strategy || 'fixed_kcal';
     targetKcal.value = data.kcal ?? 14000;
-    
+
     // Convert weekly macros back to daily for display
     targetProtein.value = (data.macros?.protein_g ?? 0) / 7;
     targetCarbs.value = (data.macros?.carbs_g ?? 0) / 7;
@@ -140,7 +135,7 @@ async function loadTarget() {
 async function saveTarget() {
   if (!canSaveTarget.value) return;
   saving.value = true;
-  
+
   try {
     const payload = {
       strategy: targetStrategy.value,

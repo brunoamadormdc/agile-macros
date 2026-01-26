@@ -1,0 +1,103 @@
+version: "3.8"
+
+services:
+  # ----------------------------
+  # Banco de Dados (Seguro)
+  # ----------------------------
+  mongo:
+    image: mongo:7.0
+    container_name: agile_mongo
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASS}
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - agile_network
+    # Segurança: NÃO expor porta 27017 para o host
+
+  # ----------------------------
+  # API Backend
+  # ----------------------------
+  api:
+    build: ./server
+    container_name: agile_api
+    restart: unless-stopped
+    environment:
+      PORT: 3001
+      MONGO_URI: mongodb://${MONGO_ROOT_USER}:${MONGO_ROOT_PASS}@mongo:27017/app_counter?authSource=admin
+      JWT_SECRET: ${JWT_SECRET}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      NODE_ENV: production
+      CLIENT_URL: https://app.seudominio.com
+      LANDING_URL: https://seudominio.com
+    networks:
+      - agile_network
+    depends_on:
+      - mongo
+
+  # ----------------------------
+  # Web App (Frontend)
+  # ----------------------------
+  web:
+    build:
+      context: ./web
+      args:
+        VITE_API_URL: https://api.seudominio.com/api
+    container_name: agile_web
+    restart: unless-stopped
+    networks:
+      - agile_network
+
+  # ----------------------------
+  # Landing Page
+  # ----------------------------
+  landing:
+    build: ./landing_page
+    container_name: agile_landing
+    restart: unless-stopped
+    environment:
+      PORT: 3000
+    networks:
+      - agile_network
+
+  # ----------------------------
+  # Gateway Nginx + SSL
+  # ----------------------------
+  nginx:
+    image: nginx:alpine
+    container_name: agile_gateway
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx_conf:/etc/nginx/conf.d
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    networks:
+      - agile_network
+    depends_on:
+      - api
+      - web
+      - landing
+
+  # ----------------------------
+  # Renovação Automática SSL
+  # ----------------------------
+  certbot:
+    image: certbot/certbot
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    command: certonly --webroot -w /var/www/certbot --email ${CERTBOT_EMAIL} --agree-tos --no-eff-email -d ${DOMAIN_MAIN} -d ${DOMAIN_APP} -d ${DOMAIN_API}
+    profiles:
+      - cert_only # Só roda se chamado explicitamente ou configurado
+
+volumes:
+  mongo_data:
+
+networks:
+  agile_network:
+    driver: bridge

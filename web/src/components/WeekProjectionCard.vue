@@ -329,7 +329,7 @@ function calcPercent(val, target) {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background: white;
+  background: var(--color-bg-card);
   border: 1px solid var(--color-border);
   border-radius: 50%;
   width: 24px;

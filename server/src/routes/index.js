@@ -1167,6 +1167,50 @@ router.get("/week/summary", requireAuth, async (req, res, next) => {
       kcalSoFar += Number(days[i].kcal || 0);
     }
 
+    // Dynamic Daily Target (Smart Balance)
+    let kcalBeforeToday = 0;
+    for (let i = 0; i < dayIndex; i++) {
+      kcalBeforeToday += Number(days[i].kcal || 0);
+    }
+    const remainingWeekKcal = targetWeek.kcal - kcalBeforeToday;
+    const remainingDays = 7 - dayIndex;
+    const dailyTargetKcal =
+      remainingDays > 0 ? round2(remainingWeekKcal / remainingDays) : 0;
+
+    // Dynamic Daily Macros Target (Smart Balance)
+    let macrosBeforeToday = { protein_g: 0, carbs_g: 0, fat_g: 0 };
+    for (let i = 0; i < dayIndex; i++) {
+      macrosBeforeToday.protein_g += Number(days[i].protein_g || 0);
+      macrosBeforeToday.carbs_g += Number(days[i].carbs_g || 0);
+      macrosBeforeToday.fat_g += Number(days[i].fat_g || 0);
+    }
+
+    // Calculate remaining limits or fallback to average if strategy isn't macro-based
+    const dailyTargetMacros = {};
+    if (targetWeek.protein_g) {
+      const remaining = targetWeek.protein_g - macrosBeforeToday.protein_g;
+      dailyTargetMacros.protein_g =
+        remainingDays > 0 ? round2(remaining / remainingDays) : 0;
+    } else {
+      dailyTargetMacros.protein_g = 0;
+    }
+
+    if (targetWeek.carbs_g) {
+      const remaining = targetWeek.carbs_g - macrosBeforeToday.carbs_g;
+      dailyTargetMacros.carbs_g =
+        remainingDays > 0 ? round2(remaining / remainingDays) : 0;
+    } else {
+      dailyTargetMacros.carbs_g = 0;
+    }
+
+    if (targetWeek.fat_g) {
+      const remaining = targetWeek.fat_g - macrosBeforeToday.fat_g;
+      dailyTargetMacros.fat_g =
+        remainingDays > 0 ? round2(remaining / remainingDays) : 0;
+    } else {
+      dailyTargetMacros.fat_g = 0;
+    }
+
     const avgPerDaySoFar = daysSoFar ? round2(kcalSoFar / daysSoFar) : 0;
     const projectedWeekKcal = round2(avgPerDaySoFar * 7);
     const projectedBalanceKcal = round2(targetWeek.kcal - projectedWeekKcal);
@@ -1178,6 +1222,8 @@ router.get("/week/summary", requireAuth, async (req, res, next) => {
       targetWeek,
       balance,
       status,
+      dailyTargetKcal, // New field for frontend
+      dailyTargetMacros, // New field for frontend
       projection: {
         remainingDays: 7 - daysSoFar,
         avgPerDaySoFar,

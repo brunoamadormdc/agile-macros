@@ -21,6 +21,12 @@ const env = {
   smtpFrom:
     process.env.SMTP_FROM ||
     '"App Counter" <cassidy.eichmann32@ethereal.email>',
+  rateLimitMax: process.env.RATE_LIMIT_MAX
+    ? Number(process.env.RATE_LIMIT_MAX)
+    : 2000,
+  rateLimitWindowMs: process.env.RATE_LIMIT_WINDOW_MS
+    ? Number(process.env.RATE_LIMIT_WINDOW_MS)
+    : 15 * 60 * 1000,
 };
 
 module.exports = env;

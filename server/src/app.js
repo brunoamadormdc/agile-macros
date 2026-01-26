@@ -6,6 +6,7 @@ const xss = require("xss-clean");
 const rateLimit = require("express-rate-limit");
 const routes = require("./routes");
 const { errorHandler, notFoundHandler } = require("./middlewares/error");
+const env = require("./config/env");
 
 const app = express();
 
@@ -26,9 +27,9 @@ app.use(xss());
 
 // Global Rate Limiting - Basic protection against DDoS / Brute Force
 const globalLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
-  message: "Too many requests from this IP, please try again after 15 minutes",
+  windowMs: env.rateLimitWindowMs,
+  max: env.rateLimitMax,
+  message: "Too many requests from this IP, please try again later",
 });
 // Apply global limiter to all routes starting with /api
 app.use("/api", globalLimiter);

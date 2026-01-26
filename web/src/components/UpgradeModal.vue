@@ -59,7 +59,7 @@ function goToPlans() {
 }
 
 .modal {
-    background: white;
+    background: var(--color-bg-card);
     border-radius: 24px;
     width: 100%;
     max-width: 600px;
@@ -119,7 +119,7 @@ function goToPlans() {
 
 .modal-body {
     padding: 1rem 2rem 2.5rem;
-    background: #fafaf9;
+    background: var(--color-bg-body);
 }
 
 .plans-grid {
@@ -136,7 +136,7 @@ function goToPlans() {
 }
 
 .plan-card {
-    background: white;
+    background: var(--color-bg-card);
     border: 1px solid var(--color-border);
     border-radius: 16px;
     padding: 1.5rem;
@@ -153,8 +153,8 @@ function goToPlans() {
 
 .plan-card.featured {
     border: 2px solid var(--color-primary);
-    background: #f0fdf4;
-    /* Emerald 50 tint */
+    background: var(--color-primary-light);
+    /* Emerald tint */
 }
 
 .badge-popular {
