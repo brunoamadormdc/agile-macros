@@ -1,90 +1,103 @@
-# App Counter MVP
+# Agile Macros 🥗⚡
 
-Monorepo simples com backend (Express + MongoDB) e frontend (Vue 3 + Vite) para registrar consumo diario, ver saldo semanal e projecao.
+> O fim do "Dia do Lixo". Controle sua dieta com liberdade, Inteligência Artificial e estratégia de Saldo Semanal.
 
-## Requisitos
+O **Agile Macros** é uma plataforma completa de nutrição que combina simplicidade de uso com estratégias avançadas de dieta flexível. Diferente de apps tradicionais que zeram sua meta à meia-noite, o Agile Macros foca no **Balanço Semanal**, permitindo que você coma o que gosta sem culpa, desde que compense ao longo da semana.
 
-- Node.js 18+
-- MongoDB local ou remoto
+![Agile Macros Cover](https://via.placeholder.com/800x400?text=Agile+Macros+Preview)
 
-## Setup
+## ✨ Principais Diferenciais
+
+- **🎙️ Voice-to-Log**: Fale o que comeu ("Arroz com feijão e frango") e a IA reconhece e registra os macros em segundos.
+- **📉 Saldo Semanal Inteligente**: Exagerou no sábado? O app recalcula automaticamente sua meta diária para os dias restantes, diluindo o excesso sem te deixar passar fome.
+- **📋 Smart Copy**: Ferramentas poderosas para quem come a mesma coisa. Copie refeições ou dias inteiros com um clique.
+- **🌓 Dark Mode Nativo**: Interface pensada para uso constante, com tema escuro que descansa a vista.
+- **📲 PWA (Progressive Web App)**: Instale no celular sem passar pela loja de apps. Funciona offline e gasta menos bateria.
+
+---
+
+## 🛠️ Stack Tecnológico
+
+O projeto utiliza uma arquitetura **Monorepo** moderna e performática:
+
+### 🎨 Frontend (Web App)
+
+- **Framework**: Vue.js 3 + Vite
+- **State Management**: Pinia
+- **Estilização**: CSS Moderno (Variáveis, Flexbox/Grid) sem frameworks pesados.
+- **PWA**: Vite PWA Plugin
+
+### 📢 Landing Page
+
+- **Framework**: Nuxt 3 (SSR para SEO otimizado)
+- **Design**: Responsivo e focado em conversão.
+
+### ⚙️ Backend (API)
+
+- **Runtime**: Node.js + Express
+- **Banco de Dados**: MongoDB (Mongoose)
+- **Segurança**: JWT Auth, Bcrypt.
+- **IA**: Integração com OpenAI (GPT-4o/Flash) para processamento de linguagem natural.
+
+---
+
+## 🚀 Como Rodar Localmente
+
+Pré-requisitos: Node.js 18+ e MongoDB rodando localmente (ou URI externa).
+
+### 1. Backend (API)
 
 ```bash
+cd server
 npm install
-```
 
-Crie o arquivo `server/.env` com base em `server/.env.example`.
+# Crie um arquivo .env na pasta server com:
+# PORT=3001
+# MONGO_URI=mongodb://localhost:27017/app_counter
+# JWT_SECRET=sua_chave_secreta
+# OPENAI_API_KEY=sk-...
 
-## Rodar em dev
-
-```bash
 npm run dev
 ```
 
-- API: http://localhost:4000
-- Web: http://localhost:5173
+_O servidor rodará em `http://localhost:3001`_
 
-## Scripts
-
-- `npm run dev` - server + web em paralelo
-- `npm run dev:server` - apenas backend
-- `npm run dev:web` - apenas frontend
-- `npm run start` - backend em modo producao
-
-## Rotas principais
-
-### Health
+### 2. Web App (Aplicação Principal)
 
 ```bash
-curl http://localhost:4000/health
+cd web
+npm install
+npm run dev
 ```
 
-### Buscar alimentos no catalogo
+_Acesse em `http://localhost:5173`_
+
+### 3. Landing Page (Site Institucional)
 
 ```bash
-curl "http://localhost:4000/api/foods/search?q=arroz"
+cd landing_page
+npm install
+npm run dev
 ```
 
-### Diario
+_Acesse em `http://localhost:3000`_
 
-```bash
-# Buscar diario
-curl http://localhost:4000/api/diary/2024-12-01
+---
 
-# Adicionar item via catalogo
-curl -X POST http://localhost:4000/api/diary/2024-12-01/items \
-  -H "Content-Type: application/json" \
-  -d '{"type":"catalog","catalogKey":"arroz_cozido","qty":2}'
+## 📂 Estrutura do Projeto
 
-# Adicionar item manual
-curl -X POST http://localhost:4000/api/diary/2024-12-01/items \
-  -H "Content-Type: application/json" \
-  -d '{"type":"manual","label":"Shake","qty":1,"unit":"copo","macros":{"kcal":300,"protein_g":25,"carbs_g":35,"fat_g":8}}'
-
-# Remover item (index 0)
-curl -X DELETE http://localhost:4000/api/diary/2024-12-01/items/0
+```
+/
+├── landing_page/      # Site de marketing (Nuxt)
+├── web/              # Aplicação principal (Vue 3 PWA)
+├── server/           # API REST e Lógica de Negócios (Node)
+└── DEPLOYMENT_GUIDE.md # Guia completo de publicação (VPS + Vercel)
 ```
 
-### Presets
+## 📄 Licença
 
-```bash
-# Listar
-curl http://localhost:4000/api/presets
+Este projeto é de uso pessoal e educacional.
 
-# Criar
-curl -X POST http://localhost:4000/api/presets \
-  -H "Content-Type: application/json" \
-  -d '{"name":"Cafe padrao","serving":{"label":"Copo","qty":1,"unit":"copo"},"macros":{"kcal":120,"protein_g":6,"carbs_g":10,"fat_g":5}}'
-```
+---
 
-### Semana
-
-```bash
-curl "http://localhost:4000/api/week/summary?date=2024-12-01"
-```
-
-## Notas
-
-- Datas sempre em ISO `YYYY-MM-DD` no backend.
-- MVP usa `userId` fixo `demo-user`.
-- Macros do catalogo sao estimativas aproximadas para demonstracao.
+Desenvolvido com 💚 e ☕ por **Bruno Amador**.
