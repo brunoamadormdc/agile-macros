@@ -1,10 +1,10 @@
-# Agile Macros 🥗⚡
+# MacroWeek 🥗⚡
 
 > O fim do "Dia do Lixo". Controle sua dieta com liberdade, Inteligência Artificial e estratégia de Saldo Semanal.
 
-O **Agile Macros** é uma plataforma completa de nutrição que combina simplicidade de uso com estratégias avançadas de dieta flexível. Diferente de apps tradicionais que zeram sua meta à meia-noite, o Agile Macros foca no **Balanço Semanal**, permitindo que você coma o que gosta sem culpa, desde que compense ao longo da semana.
+O **MacroWeek** é uma plataforma completa de nutrição que combina simplicidade de uso com estratégias avançadas de dieta flexível. Diferente de apps tradicionais que zeram sua meta à meia-noite, o MacroWeek foca no **Balanço Semanal**, permitindo que você coma o que gosta sem culpa, desde que compense ao longo da semana.
 
-![Agile Macros Cover](https://via.placeholder.com/800x400?text=Agile+Macros+Preview)
+![MacroWeek Cover](https://via.placeholder.com/800x400?text=MacroWeek+Preview)
 
 ## ✨ Principais Diferenciais
 

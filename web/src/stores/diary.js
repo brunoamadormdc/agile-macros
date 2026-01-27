@@ -38,6 +38,8 @@ export const useDiaryStore = defineStore("diary", {
         await addDiaryItem(this.selectedDate, payload);
         await this.loadDiary(this.selectedDate);
         await weekStore.loadWeekSummary(this.selectedDate);
+        // Refresh streak info
+        await useAuthStore().fetchMe();
         return true;
       } catch (err) {
         this.error =

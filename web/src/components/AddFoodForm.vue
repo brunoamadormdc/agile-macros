@@ -7,6 +7,16 @@
       </button>
     </div>
 
+    <!-- Meal Selector (Shared) -->
+    <div class="meal-selector">
+      <div class="meal-pills">
+        <button v-for="m in meals" :key="m.id" type="button" class="meal-pill"
+          :class="{ active: selectedMeal === m.id }" @click="selectedMeal = m.id">
+          {{ m.label }}
+        </button>
+      </div>
+    </div>
+
     <!-- Manual / Search Tab -->
     <div v-if="currentTab === 'manual'" class="tab-panel">
       <div class="search-wrapper">
@@ -144,6 +154,25 @@ const labels = {
   manual: 'Manual',
   ai: 'IA',
 };
+
+const meals = [
+  { id: 'breakfast', label: 'Café' },
+  { id: 'lunch', label: 'Almoço' },
+  { id: 'snack', label: 'Lanche' },
+  { id: 'dinner', label: 'Jantar' },
+  { id: 'supper', label: 'Ceia' },
+];
+
+function getDefaultMeal() {
+  const hour = new Date().getHours();
+  if (hour >= 6 && hour < 11) return 'breakfast';
+  if (hour >= 11 && hour < 15) return 'lunch';
+  if (hour >= 15 && hour < 18) return 'snack';
+  if (hour >= 18 && hour < 22) return 'dinner';
+  return 'supper'; // Late night or early morning
+}
+
+const selectedMeal = ref(getDefaultMeal());
 
 const currentTab = ref('manual');
 
@@ -317,6 +346,7 @@ function submitManual() {
       carbs_g: Number(manual.value.macros.carbs_g),
       fat_g: Number(manual.value.macros.fat_g),
     },
+    meal: selectedMeal.value,
   });
   // Reset
   manual.value = {
@@ -331,6 +361,7 @@ function submitManual() {
 function submitAi() {
   emit('add-ai', {
     text: aiText.value.trim() || undefined,
+    meal: selectedMeal.value,
     imageDataUrl: aiImageDataUrl.value || undefined,
   });
 }
@@ -354,6 +385,37 @@ function onImageChange(event) {
 <style scoped>
 .rel {
   position: relative;
+}
+
+.meal-selector {
+  margin-bottom: 1rem;
+  overflow-x: auto;
+}
+
+.meal-pills {
+  display: flex;
+  gap: 0.5rem;
+  padding-bottom: 4px;
+  /* for scrollbar */
+}
+
+.meal-pill {
+  background: var(--color-bg-body);
+  border: 1px solid var(--color-border);
+  border-radius: 20px;
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.meal-pill.active {
+  background: var(--color-primary-light);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  font-weight: 600;
 }
 
 .search-wrapper {

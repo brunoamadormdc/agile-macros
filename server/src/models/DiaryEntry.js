@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const ItemSchema = new mongoose.Schema(
   {
@@ -9,9 +9,14 @@ const ItemSchema = new mongoose.Schema(
     protein_g: { type: Number, required: true },
     carbs_g: { type: Number, required: true },
     fat_g: { type: Number, required: true },
-    source: { type: String, enum: ['manual', 'preset', 'catalog', 'ai'], required: true },
+    meal: { type: String, default: "other" }, // breakfast, lunch, snack, dinner, supper, other
+    source: {
+      type: String,
+      enum: ["manual", "preset", "catalog", "ai"],
+      required: true,
+    },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const TotalsSchema = new mongoose.Schema(
@@ -21,7 +26,7 @@ const TotalsSchema = new mongoose.Schema(
     carbs_g: { type: Number, required: true, default: 0 },
     fat_g: { type: Number, required: true, default: 0 },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const DiaryEntrySchema = new mongoose.Schema(
@@ -31,9 +36,9 @@ const DiaryEntrySchema = new mongoose.Schema(
     items: { type: [ItemSchema], default: [] },
     totals: { type: TotalsSchema, default: () => ({}) },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 DiaryEntrySchema.index({ userId: 1, date: 1 }, { unique: true });
 
-module.exports = mongoose.model('DiaryEntry', DiaryEntrySchema);
+module.exports = mongoose.model("DiaryEntry", DiaryEntrySchema);

@@ -3,7 +3,7 @@
     <!-- Top Header (Logo + Account Actions) -->
     <header class="app-header">
       <div class="logo-area">
-        <img src="@/assets/logo.png" alt="Agile Macros" class="app-logo" />
+        <img :src="isDark ? logoHorWhite : logoHor" alt="MacroWeek" class="app-logo" />
       </div>
 
       <!-- Account actions -->
@@ -23,6 +23,11 @@
         <div v-if="authStore.user?.plan !== 'plus'" class="credits-badge" title="Créditos de IA">
           ⚡ {{ authStore.credits }}
         </div>
+
+        <!-- Interaction Streak -->
+        <!-- <div v-if="authStore.user?.streak > 0" class="streak-badge" title="Dias seguidos de interação">
+          🔥 {{ authStore.user.streak }} dias
+        </div> -->
 
         <button class="btn ghost small icon-only" type="button" @click="toggleTheme"
           :title="isDark ? 'Modo Claro' : 'Modo Escuro'">
@@ -70,6 +75,8 @@ import { RouterLink, RouterView, useRouter } from 'vue-router';
 import { useAuthStore } from './stores/auth';
 import { useTheme } from './composables/useTheme';
 import UpgradeModal from './components/UpgradeModal.vue';
+import logoHor from '@/assets/logo_hor.png';
+import logoHorWhite from '@/assets/logo_hor_white.png';
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -247,5 +254,36 @@ function logout() {
 .app-logo {
   width: 300px;
   height: auto;
+}
+
+.streak-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #fb923c;
+  /* Orange-400 */
+  background: rgba(251, 146, 60, 0.15);
+  border: 1px solid rgba(251, 146, 60, 0.3);
+  box-shadow: 0 0 10px rgba(251, 146, 60, 0.1);
+  white-space: nowrap;
+  animation: pulse-fire 2s infinite ease-in-out;
+}
+
+@keyframes pulse-fire {
+  0% {
+    box-shadow: 0 0 0 0 rgba(251, 146, 60, 0.2);
+  }
+
+  70% {
+    box-shadow: 0 0 0 6px rgba(251, 146, 60, 0);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(251, 146, 60, 0);
+  }
 }
 </style>

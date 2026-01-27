@@ -1,7 +1,7 @@
 <template>
     <div class="auth-page">
         <div class="auth-card">
-            <img src="@/assets/logo.png" alt="Agile Macros" class="auth-logo" />
+            <img src="@/assets/logo_hor.png" alt="Agile Macros" class="auth-logo" />
             <h2>Criar Nova Senha</h2>
             <p class="subtitle">Digite sua nova senha abaixo.</p>
 
