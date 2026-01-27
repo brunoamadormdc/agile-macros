@@ -3,11 +3,11 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "build": "nuxi build",
-    "dev": "nuxi dev",
-    "generate": "nuxi generate",
-    "preview": "nuxi preview",
-    "postinstall": "nuxi prepare"
+    "build": "npx nuxi build",
+    "dev": "npx nuxi dev",
+    "generate": "npx nuxi generate",
+    "preview": "npx nuxi preview",
+    "postinstall": "npx nuxi prepare"
   },
   "dependencies": {
     "nuxt": "^4.3.0",
