@@ -3,11 +3,11 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "build": "node node_modules/nuxt/bin/nuxt.mjs build",
-    "dev": "node node_modules/nuxt/bin/nuxt.mjs dev",
-    "generate": "node node_modules/nuxt/bin/nuxt.mjs generate",
-    "preview": "node node_modules/nuxt/bin/nuxt.mjs preview",
-    "postinstall": "node node_modules/nuxt/bin/nuxt.mjs prepare"
+    "build": "nuxi build",
+    "dev": "nuxi dev",
+    "generate": "nuxi generate",
+    "preview": "nuxi preview",
+    "postinstall": "nuxi prepare"
   },
   "dependencies": {
     "nuxt": "^4.3.0",
