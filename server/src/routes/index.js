@@ -1318,8 +1318,14 @@ router.get("/week/summary", requireAuth, async (req, res, next) => {
       targetWeek,
       balance,
       status,
-      dailyTargetKcal, // New field for frontend
+      dailyTargetKcal, // New field for frontend (adjusted)
+      baseDailyKcal: round2(targetWeek.kcal / 7), // Explicit base for UI reference
       dailyTargetMacros, // New field for frontend
+      baseDailyMacros: {
+        protein_g: targetWeek.protein_g ? round2(targetWeek.protein_g / 7) : 0,
+        carbs_g: targetWeek.carbs_g ? round2(targetWeek.carbs_g / 7) : 0,
+        fat_g: targetWeek.fat_g ? round2(targetWeek.fat_g / 7) : 0,
+      },
       projection: {
         remainingDays: 7 - daysSoFar,
         avgPerDaySoFar,

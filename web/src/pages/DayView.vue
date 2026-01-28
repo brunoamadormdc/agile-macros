@@ -21,7 +21,9 @@
 
         <div v-show="statsTab === 'day'" style="margin-top: 1rem;">
           <DayTotalsCard :totals="diaryTotals" :target="weekStore.weekSummary?.dailyTargetKcal || 0"
-            :target-macros="weekStore.weekSummary?.dailyTargetMacros || {}" />
+            :target-macros="weekStore.weekSummary?.dailyTargetMacros || {}"
+            :base-target="weekStore.weekSummary?.baseDailyKcal || 0"
+            :base-macros="weekStore.weekSummary?.baseDailyMacros || {}" />
         </div>
 
         <div v-show="statsTab === 'week'" style="margin-top: 1rem;">

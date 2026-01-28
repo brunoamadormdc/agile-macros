@@ -14,9 +14,20 @@
         <div class="progress-bar">
           <div class="progress-fill" :class="{ 'bg-danger pulse': totals.kcal > target }"
             :style="{ width: calcPercent(totals.kcal, target) }"></div>
+
+          <!-- Base Target Marker -->
+          <div v-if="baseTarget > 0" class="base-marker" :style="{ left: calcPercent(baseTarget, target) }">
+            <span class="marker-label">{{ Math.round(baseTarget) }}</span>
+            <div class="marker-arrow"></div>
+          </div>
         </div>
         <div class="remaining-text">
-          <span>Meta: {{ Math.round(target) }}</span>
+          <span>
+            Meta: {{ Math.round(target) }}
+            <small v-if="baseTarget && baseTarget !== target" class="text-muted">
+              (Base: {{ Math.round(baseTarget) }})
+            </small>
+          </span>
           <span :class="remaining < 0 ? 'text-danger' : 'text-success'">
             {{ remaining >= 0 ? 'Restam: ' : 'Excedeu: ' }} {{ Math.abs(Math.round(remaining)) }}
           </span>
@@ -36,6 +47,13 @@
             <div class="progress-fill"
               :class="{ 'bg-danger pulse': targetMacros?.protein_g > 0 && totals.protein_g > targetMacros.protein_g }"
               :style="{ width: calcPercent(totals.protein_g, targetMacros?.protein_g) }"></div>
+
+            <!-- Macro Base Marker -->
+            <div v-if="baseMacros?.protein_g > 0" class="base-marker mini"
+              :style="{ left: calcPercent(baseMacros.protein_g, targetMacros?.protein_g) }">
+              <span class="marker-label">{{ Math.round(baseMacros.protein_g) }}</span>
+              <div class="marker-arrow"></div>
+            </div>
           </div>
         </div>
 
@@ -51,6 +69,13 @@
             <div class="progress-fill"
               :class="{ 'bg-danger pulse': targetMacros?.carbs_g > 0 && totals.carbs_g > targetMacros.carbs_g }"
               :style="{ width: calcPercent(totals.carbs_g, targetMacros?.carbs_g) }"></div>
+
+            <!-- Macro Base Marker -->
+            <div v-if="baseMacros?.carbs_g > 0" class="base-marker mini"
+              :style="{ left: calcPercent(baseMacros.carbs_g, targetMacros?.carbs_g) }">
+              <span class="marker-label">{{ Math.round(baseMacros.carbs_g) }}</span>
+              <div class="marker-arrow"></div>
+            </div>
           </div>
         </div>
 
@@ -66,6 +91,13 @@
             <div class="progress-fill"
               :class="{ 'bg-danger pulse': targetMacros?.fat_g > 0 && totals.fat_g > targetMacros.fat_g }"
               :style="{ width: calcPercent(totals.fat_g, targetMacros?.fat_g) }"></div>
+
+            <!-- Macro Base Marker -->
+            <div v-if="baseMacros?.fat_g > 0" class="base-marker mini"
+              :style="{ left: calcPercent(baseMacros.fat_g, targetMacros?.fat_g) }">
+              <span class="marker-label">{{ Math.round(baseMacros.fat_g) }}</span>
+              <div class="marker-arrow"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -85,7 +117,15 @@ const props = defineProps({
     type: Number,
     default: 0
   },
+  baseTarget: {
+    type: Number,
+    default: 0
+  },
   targetMacros: {
+    type: Object,
+    default: () => ({})
+  },
+  baseMacros: {
     type: Object,
     default: () => ({})
   }
@@ -98,7 +138,7 @@ function calcPercent(val, target) {
     return (val > 0) ? '100%' : '0%';
   }
   const pct = (val || 0) / target * 100;
-  return Math.min(100, pct) + '%';
+  return Math.min(100, pct) + '%'; // Cap at 100 for width, handled differently for markers if needed
 }
 </script>
 
@@ -174,6 +214,11 @@ function calcPercent(val, target) {
   gap: 4px;
 }
 
+.progress-bar {
+  position: relative;
+  /* Needed for absolute positioning of markers */
+}
+
 .progress-bar.mini {
   height: 3px;
   margin-top: 2px;
@@ -185,6 +230,90 @@ function calcPercent(val, target) {
   gap: 0.5rem;
   margin-bottom: 0.5rem;
 }
+
+/* Base Target Marker Styling */
+/* Base Target Marker Styling */
+.base-marker {
+  position: absolute;
+  top: -22px;
+  /* Position above the bar */
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.marker-label {
+  font-size: 0.65rem;
+  color: var(--color-text-main);
+  background: rgba(0, 0, 0, 0.7);
+  padding: 1px 4px;
+  border-radius: 4px;
+  white-space: nowrap;
+  margin-bottom: 2px;
+  font-weight: 700;
+}
+
+.marker-arrow {
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 8px solid var(--color-text-main);
+  /* Downward pointing arrow, clearly visible */
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.5));
+}
+
+/* Vertical line through the bar */
+.base-marker::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  /* Start below the arrow (at the bar top) */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2px;
+  height: 18px;
+  /* Height of the progress bar */
+  background: rgba(255, 255, 255, 0.5);
+  z-index: -1;
+}
+
+
+/* Mini Markers for Macros */
+/* Mini Markers for Macros */
+.base-marker.mini {
+  top: -16px;
+  /* Position label just above the bar */
+  z-index: 4;
+}
+
+.base-marker.mini .marker-label {
+  font-size: 0.7rem;
+  background: transparent;
+  /* Clean text look */
+  padding: 0;
+  margin-bottom: 0;
+  line-height: 1;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+  /* Ensure readability */
+}
+
+.base-marker.mini .marker-arrow {
+  border-left: 3px solid transparent;
+  border-right: 3px solid transparent;
+  border-top: 4px solid var(--color-text-muted);
+  margin-top: 1px;
+}
+
+.base-marker.mini::after {
+  height: 6px;
+  width: 1px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
 
 .remaining-text {
   display: flex;
