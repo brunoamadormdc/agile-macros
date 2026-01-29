@@ -40,7 +40,7 @@
           <div class="value-wrapper">
             <span class="macro-val">{{ totals.protein_g?.toFixed(1) || 0 }}g</span>
             <span v-if="targetMacros?.protein_g" class="macro-target">
-              / {{ Math.round(targetMacros.protein_g) }}g
+              de {{ Math.round(targetMacros.protein_g) }}g
             </span>
           </div>
           <div class="progress-bar mini">
@@ -62,7 +62,7 @@
           <div class="value-wrapper">
             <span class="macro-val">{{ totals.carbs_g?.toFixed(1) || 0 }}g</span>
             <span v-if="targetMacros?.carbs_g" class="macro-target">
-              / {{ Math.round(targetMacros.carbs_g) }}g
+              de {{ Math.round(targetMacros.carbs_g) }}g
             </span>
           </div>
           <div class="progress-bar mini">
@@ -84,7 +84,7 @@
           <div class="value-wrapper">
             <span class="macro-val">{{ totals.fat_g?.toFixed(1) || 0 }}g</span>
             <span v-if="targetMacros?.fat_g" class="macro-target">
-              / {{ Math.round(targetMacros.fat_g) }}g
+              de {{ Math.round(targetMacros.fat_g) }}g
             </span>
           </div>
           <div class="progress-bar mini">
@@ -350,6 +350,22 @@ function calcPercent(val, target) {
 
   100% {
     opacity: 1;
+  }
+}
+
+@media (max-width: 640px) {
+  .macros-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .value-wrapper {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+  }
+
+  .macro-target {
+    font-size: 0.75rem;
   }
 }
 </style>

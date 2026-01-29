@@ -1,9 +1,39 @@
 <template>
   <section class="page">
     <DatePickerSimple :model-value="currentDate" @update:model-value="onDateChange" />
-    <p class="muted">Data selecionada: {{ formatDateBR(currentDate) }}</p>
 
-    <div v-if="diaryStore.loading || weekStore.loading" class="loading">Carregando...</div>
+    <div v-if="diaryStore.loading || weekStore.loading" class="stack skeleton-container">
+      <!-- Totals Card Skeleton -->
+      <section class="card skeleton-card">
+        <div class="skeleton-tabs-row">
+          <div class="skeleton-tab"></div>
+          <div class="skeleton-tab"></div>
+        </div>
+        <div class="skeleton-header"></div>
+        <div class="skeleton-stat-main"></div>
+        <div class="skeleton-bar-large"></div>
+        <div class="skeleton-macros-row">
+          <div class="skeleton-macro-col"></div>
+          <div class="skeleton-macro-col"></div>
+          <div class="skeleton-macro-col"></div>
+        </div>
+      </section>
+
+      <!-- Main Content Skeleton -->
+      <section class="card skeleton-card">
+        <div class="skeleton-tabs-row" style="margin-bottom: 2rem;">
+          <div class="skeleton-tab large"></div>
+          <div class="skeleton-tab large"></div>
+          <div class="skeleton-tab large"></div>
+        </div>
+
+        <!-- List items simulation -->
+        <div class="skeleton-list-item"></div>
+        <div class="skeleton-list-item"></div>
+        <div class="skeleton-list-item"></div>
+      </section>
+    </div>
+
     <div v-else-if="diaryStore.error || weekStore.error" class="error">
       {{ diaryStore.error || weekStore.error }}
     </div>
@@ -46,7 +76,7 @@
         </div>
 
         <!-- Add Section -->
-        <div v-show="mainTab === 'add'" style="margin-top: 1rem;">
+        <div v-show="mainTab === 'add'" style="margin-top: 2rem;">
           <AddFoodForm :loading="diaryStore.loading" @add="handleAdd" @add-ai="handleAddAi" />
         </div>
 
@@ -65,16 +95,10 @@
               Copia os itens de {{ formatDateBR(currentDate) }} para um intervalo de datas.
             </p>
             <div class="grid-2">
-              <label class="field">
-                Data inicial
-                <input v-model="copyStart" type="date" />
-              </label>
-              <label class="field">
-                Data final
-                <input v-model="copyEnd" type="date" />
-              </label>
+              <DatePickerInput v-model="copyStart" label="Data inicial" placeholder="dd/mm/aaaa" />
+              <DatePickerInput v-model="copyEnd" label="Data final" placeholder="dd/mm/aaaa" />
             </div>
-            <label class="checkbox">
+            <label class="checkbox" style="margin-top: 1rem;">
               <input v-model="copyOverwrite" type="checkbox" />
               Sobrescrever itens existentes
             </label>
@@ -101,6 +125,7 @@ import { useDiaryStore } from '../stores/diary';
 import { useWeekStore } from '../stores/week';
 import { useAuthStore } from '../stores/auth';
 import DatePickerSimple from '../components/DatePickerSimple.vue';
+import DatePickerInput from '../components/DatePickerInput.vue';
 import DayTotalsCard from '../components/DayTotalsCard.vue';
 import WeekProjectionCard from '../components/WeekProjectionCard.vue';
 import ItemsList from '../components/ItemsList.vue';
@@ -255,5 +280,96 @@ watch(
   background: var(--color-bg-body);
   border-color: var(--color-border);
   font-weight: 600;
+}
+
+/* Skeleton Loading Styles */
+.skeleton-container {
+  width: 100%;
+}
+
+.skeleton-card {
+  padding: 1.5rem;
+}
+
+/* Shimmer Animation */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton-tabs-row {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.skeleton-tab {
+  height: 32px;
+  width: 80px;
+  border-radius: 8px;
+  background: linear-gradient(90deg, var(--color-bg-body) 25%, var(--color-border) 50%, var(--color-bg-body) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+.skeleton-tab.large {
+  width: 120px;
+  height: 40px;
+}
+
+.skeleton-header {
+  height: 24px;
+  width: 150px;
+  margin-bottom: 1.5rem;
+  border-radius: 4px;
+  background: var(--color-bg-body);
+}
+
+.skeleton-stat-main {
+  height: 60px;
+  width: 120px;
+  margin: 0 auto 1rem;
+  border-radius: 12px;
+  background: linear-gradient(90deg, var(--color-bg-body) 25%, var(--color-border) 50%, var(--color-bg-body) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+.skeleton-bar-large {
+  height: 24px;
+  width: 100%;
+  border-radius: 12px;
+  margin-bottom: 2rem;
+  background: var(--color-bg-body);
+  opacity: 0.6;
+}
+
+.skeleton-macros-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1rem;
+}
+
+.skeleton-macro-col {
+  height: 80px;
+  border-radius: 12px;
+  background: var(--color-bg-body);
+  opacity: 0.5;
+}
+
+.skeleton-list-item {
+  height: 60px;
+  width: 100%;
+  margin-bottom: 1rem;
+  border-radius: 12px;
+  background: linear-gradient(90deg, var(--color-bg-body) 25%, var(--color-border) 50%, var(--color-bg-body) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  opacity: 0.7;
 }
 </style>

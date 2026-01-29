@@ -1,6 +1,6 @@
 <template>
   <section>
-    <div class="tabs">
+    <div class="tabs" style="margin-bottom: 2rem;">
       <button v-for="t in tabs" :key="t" type="button" :class="['tab', { active: currentTab === t }]"
         @click="currentTab = t">
         {{ labels[t] }}
@@ -33,7 +33,7 @@
         </label>
       </div>
 
-      <div class="grid-2" style="grid-template-columns: 2fr 1fr;">
+      <div class="grid-2 qty-grid">
         <label class="field">
           Quantidade
           <input v-model.number="manual.qty" type="number" min="0" step="0.1" @input="recalcIfBasedOnItem" />
@@ -44,7 +44,7 @@
         </label>
       </div>
 
-      <div class="grid-2" style="grid-template-columns: repeat(4, 1fr);">
+      <div class="grid-macros">
         <label class="field">
           Kcal
           <input v-model.number="manual.macros.kcal" type="number" min="0" step="0.1" />
@@ -141,6 +141,9 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
 import { searchFoods } from '../services/api';
+import { useToast } from 'vue-toastification';
+
+const toast = useToast();
 // Ensure searchFoods now calls /food-items/search
 
 const props = defineProps({
@@ -373,6 +376,22 @@ function onImageChange(event) {
     aiFileName.value = '';
     return;
   }
+
+  // Validation: Max 5MB
+  const MAX_SIZE = 5 * 1024 * 1024;
+  if (file.size > MAX_SIZE) {
+    toast.error("A imagem deve ter no máximo 5MB.");
+    event.target.value = ''; // Reset input
+    return;
+  }
+
+  // Validation: Type
+  if (!file.type.startsWith('image/')) {
+    toast.error("Apenas arquivos de imagem são permitidos.");
+    event.target.value = '';
+    return;
+  }
+
   const reader = new FileReader();
   reader.onload = () => {
     aiImageDataUrl.value = String(reader.result || '');
@@ -387,8 +406,9 @@ function onImageChange(event) {
   position: relative;
 }
 
+
 .meal-selector {
-  margin-bottom: 1rem;
+  margin-bottom: 2rem;
   overflow-x: auto;
 }
 

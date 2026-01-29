@@ -19,6 +19,8 @@ const UserSchema = new mongoose.Schema(
     lastRenewalDate: { type: Date, default: Date.now },
     resetPasswordToken: { type: String, default: null },
     resetPasswordExpires: { type: Date, default: null },
+    dailyAIUsageCount: { type: Number, default: 0 },
+    lastAIRequestDate: { type: Date, default: Date.now },
   },
   { timestamps: true },
 );

@@ -1,8 +1,9 @@
 <template>
   <div class="date-picker-wrapper">
-    <div class="input-row">
-      <label for="date-input">Data</label>
-      <input id="date-input" type="date" :value="modelValue" @input="onChange" />
+    <div class="date-header" @click="openPicker">
+      <h2 class="current-date-text">{{ displayDate }}</h2>
+      <span class="edit-icon">📅</span>
+      <input ref="pickerInput" type="date" :value="modelValue" @input="onChange" class="hidden-picker" />
     </div>
 
     <div class="week-strip">
@@ -16,7 +17,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { toISODateLocal } from '../utils/date';
 
 const props = defineProps({
@@ -27,6 +28,7 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['update:modelValue']);
+const pickerInput = ref(null);
 
 function onChange(event) {
   emit('update:modelValue', event.target.value);
@@ -35,6 +37,39 @@ function onChange(event) {
 function selectDate(iso) {
   emit('update:modelValue', iso);
 }
+
+function openPicker() {
+  if (pickerInput.value && pickerInput.value.showPicker) {
+    pickerInput.value.showPicker();
+  } else {
+    // Fallback? Or just try focusing
+    pickerInput.value?.focus();
+    // Maybe make the input visible enough to be clicked but transparent?
+    // Using CSS pointer-events trick is better for fallback compatibility if showPicker isn't supported.
+  }
+}
+
+const displayDate = computed(() => {
+  if (!props.modelValue) return 'Selecione uma data';
+
+  const [y, m, d] = props.modelValue.split('-').map(Number);
+  const date = new Date(y, m - 1, d);
+
+  const currentYear = new Date().getFullYear();
+  const options = {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  };
+
+  if (y !== currentYear) {
+    options.year = 'numeric';
+  }
+
+  const str = new Intl.DateTimeFormat('pt-BR', options).format(date);
+  // Capitalize
+  return str.charAt(0).toUpperCase() + str.slice(1);
+});
 
 const weekDays = computed(() => {
   if (!props.modelValue) return [];
@@ -83,38 +118,47 @@ const weekDays = computed(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.5rem;
+  gap: 1rem;
   margin-bottom: 2rem;
 }
 
-.input-row {
+.date-header {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
-}
-
-.input-row label {
-  font-size: 0.9rem;
-  color: var(--color-text-muted);
-}
-
-.input-row input {
-  padding: 0.5rem 1rem;
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  font-size: 1rem;
-  color: var(--color-text-main);
-  background: var(--color-bg-card);
-  /* Changed from white to variable */
+  gap: 8px;
   cursor: pointer;
-  color-scheme: light;
-  /* Default for calender picker icon */
+  padding: 0.5rem 1rem;
+  border-radius: 12px;
+  transition: background 0.2s;
+  position: relative;
 }
 
-/* Dark mode override for calendar icon */
-:root.dark-mode .input-row input {
-  color-scheme: dark;
+.date-header:hover {
+  background: var(--color-bg-hover, rgba(0, 0, 0, 0.05));
+}
+
+.current-date-text {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-text-main);
+  margin: 0;
+  text-transform: capitalize;
+}
+
+.edit-icon {
+  font-size: 1.2rem;
+  opacity: 0.7;
+}
+
+.hidden-picker {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  z-index: 10;
+  cursor: pointer;
 }
 
 .week-strip {

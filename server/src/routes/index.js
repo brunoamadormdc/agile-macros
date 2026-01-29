@@ -23,6 +23,9 @@ const { requireAuth, JWT_SECRET } = require("../middlewares/auth");
 const { seedPresetsIfEmpty } = require("../utils/seed");
 const { sendEmail } = require("../utils/mailer");
 const crypto = require("crypto");
+const sharp = require("sharp");
+const { aiRateLimiter } = require("../middlewares/rateLimiters");
+const { checkAIUsageLimit } = require("../middlewares/aiQuota");
 
 const router = express.Router();
 
@@ -478,6 +481,31 @@ function normalizeFractionNumbers(text) {
   );
 }
 
+async function optimizeImage(dataUrl) {
+  try {
+    const matches = dataUrl.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+    if (!matches || matches.length !== 3) {
+      return dataUrl;
+    }
+    const contentType = matches[1];
+    const buffer = Buffer.from(matches[2], "base64");
+
+    const resizedBuffer = await sharp(buffer)
+      .resize(800, 800, {
+        // Max dimensions, keeping aspect ratio
+        fit: "inside",
+        withoutEnlargement: true,
+      })
+      .jpeg({ quality: 80 }) // Compress to JPEG
+      .toBuffer();
+
+    return `data:${contentType};base64,${resizedBuffer.toString("base64")}`;
+  } catch (err) {
+    console.warn("Image optimization failed, sending original", err);
+    return dataUrl;
+  }
+}
+
 async function callOpenAi({ text, imageDataUrl }) {
   if (!env.openAiKey) {
     const err = new Error("OPENAI_API_KEY is not configured");
@@ -485,64 +513,94 @@ async function callOpenAi({ text, imageDataUrl }) {
     throw err;
   }
 
+  let finalImageUrl = imageDataUrl;
+  if (finalImageUrl) {
+    finalImageUrl = await optimizeImage(finalImageUrl);
+  }
+
   const content = [];
   if (text) {
     content.push({ type: "input_text", text });
   }
-  if (imageDataUrl) {
-    content.push({ type: "input_image", image_url: imageDataUrl });
+  if (finalImageUrl) {
+    content.push({ type: "input_image", image_url: finalImageUrl });
   }
 
-  const response = await fetch("https://api.openai.com/v1/responses", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${env.openAiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: env.openAiModel,
-      input: [
-        {
-          role: "system",
-          content: [{ type: "input_text", text: AI_SYSTEM_PROMPT }],
-        },
-        {
-          role: "user",
-          content,
-        },
-      ],
-      temperature: 0.2,
-    }),
-  });
+  const MAX_RETRIES = 3;
+  let attempt = 0;
 
-  if (!response.ok) {
-    const details = await response.text();
-    const err = new Error("OpenAI request failed");
-    err.status = 502;
-    err.details = details;
-    throw err;
-  }
-
-  const data = await response.json();
-  const outputText = extractOutputText(data);
-  if (!outputText) {
-    const err = new Error("OpenAI response missing output text");
-    err.status = 502;
-    throw err;
-  }
-
-  const sanitized = sanitizeJsonText(outputText);
-  try {
-    return JSON.parse(sanitized);
-  } catch (parseError) {
-    const normalized = normalizeFractionNumbers(sanitized);
+  while (attempt < MAX_RETRIES) {
     try {
-      return JSON.parse(normalized);
-    } catch (secondError) {
-      const err = new Error("Failed to parse OpenAI response");
-      err.status = 502;
-      err.details = sanitized;
-      throw err;
+      attempt++;
+      const response = await fetch("https://api.openai.com/v1/responses", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${env.openAiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: env.openAiModel,
+          input: [
+            {
+              role: "system",
+              content: [{ type: "input_text", text: AI_SYSTEM_PROMPT }],
+            },
+            {
+              role: "user",
+              content,
+            },
+          ],
+          temperature: 0.2,
+        }),
+      });
+
+      if (response.status === 429) {
+        if (attempt >= MAX_RETRIES) {
+          const err = new Error("OpenAI Rate Limit Exceeded after retries");
+          err.status = 429;
+          throw err;
+        }
+        // Exponential backoff: 1s, 2s, 4s...
+        const waitTime = 1000 * Math.pow(2, attempt - 1);
+        console.warn(`OpenAI 429 hit. Retrying in ${waitTime}ms...`);
+        await new Promise((r) => setTimeout(r, waitTime));
+        continue;
+      }
+
+      if (!response.ok) {
+        const details = await response.text();
+        const err = new Error("OpenAI request failed");
+        err.status = 502;
+        err.details = details;
+        throw err;
+      }
+
+      const data = await response.json();
+      const outputText = extractOutputText(data);
+      if (!outputText) {
+        const err = new Error("OpenAI response missing output text");
+        err.status = 502;
+        throw err;
+      }
+
+      const sanitized = sanitizeJsonText(outputText);
+      try {
+        return JSON.parse(sanitized);
+      } catch (parseError) {
+        const normalized = normalizeFractionNumbers(sanitized);
+        try {
+          return JSON.parse(normalized);
+        } catch (secondError) {
+          const err = new Error("Failed to parse OpenAI response");
+          err.status = 502;
+          err.details = sanitized;
+          throw err;
+        }
+      }
+    } catch (error) {
+      if (attempt >= MAX_RETRIES || error.status !== 429) {
+        throw error;
+      }
     }
   }
 }
@@ -892,92 +950,103 @@ router.put("/diary/:date/items/:itemIndex", async (req, res, next) => {
   }
 });
 
-router.post("/diary/:date/ai", async (req, res, next) => {
-  try {
-    const date = validateOrThrow(
-      dateParamSchema,
-      req.params.date,
-      "Invalid date",
-    );
-    ensureISODate(date);
-
-    // Check user plan and credits
-    const user = await User.findById(req.user.id);
-    if (!user) {
-      return res.status(401).json({ error: { message: "User not found" } });
-    }
-
-    const isUnlimited = user.plan === "plus";
-
-    if (!isUnlimited) {
-      if (user.credits <= 0) {
-        const err = new Error(
-          "Saldo de créditos insuficiente. Faça um upgrade!",
-        );
-        err.status = 402;
-        throw err;
-      }
-      user.credits -= 1;
-      await user.save();
-    }
-
-    const payload = validateOrThrow(
-      aiRequestSchema,
-      req.body,
-      "Invalid payload",
-    );
-
-    let aiData;
+// Apply specific AI rate limiter and Quota check
+router.post(
+  "/diary/:date/ai",
+  aiRateLimiter,
+  checkAIUsageLimit,
+  async (req, res, next) => {
     try {
-      aiData = await callOpenAi({
-        text: payload.text,
-        imageDataUrl: payload.imageDataUrl,
-      });
-    } catch (apiError) {
-      // Refund credit if AI fails and user is not unlimited
-      if (!isUnlimited) {
-        await User.findByIdAndUpdate(req.user.id, { $inc: { credits: 1 } });
+      const date = validateOrThrow(
+        dateParamSchema,
+        req.params.date,
+        "Invalid date",
+      );
+      ensureISODate(date);
+
+      // Check user plan and credits
+      const user = await User.findById(req.user.id);
+      if (!user) {
+        return res.status(401).json({ error: { message: "User not found" } });
       }
-      throw apiError;
+
+      const isUnlimited = user.plan === "plus";
+
+      if (!isUnlimited) {
+        if (user.credits <= 0) {
+          const err = new Error(
+            "Saldo de créditos insuficiente. Faça um upgrade!",
+          );
+          err.status = 402;
+          throw err;
+        }
+        user.credits -= 1;
+        await user.save();
+      }
+
+      const payload = validateOrThrow(
+        aiRequestSchema,
+        req.body,
+        "Invalid payload",
+      );
+
+      let aiData;
+      try {
+        aiData = await callOpenAi({
+          text: payload.text,
+          imageDataUrl: payload.imageDataUrl,
+        });
+      } catch (apiError) {
+        // Refund credit if AI fails and user is not unlimited
+        if (!isUnlimited) {
+          await User.findByIdAndUpdate(req.user.id, { $inc: { credits: 1 } });
+        }
+        throw apiError;
+      }
+
+      const parsed = validateOrThrow(
+        aiItemsSchema,
+        aiData,
+        "Invalid AI response",
+      );
+      const items = parsed.items.map((item) => ({
+        label: item.label,
+        qty: item.qty,
+        unit: item.unit,
+        kcal: item.kcal,
+        protein_g: item.protein_g,
+        carbs_g: item.carbs_g,
+        meal: payload.meal || item.meal || "other",
+        fat_g: item.fat_g,
+        source: "ai",
+      }));
+
+      const entry = await DiaryEntry.findOneAndUpdate(
+        { userId: req.user.id, date },
+        { $setOnInsert: { userId: req.user.id, date } },
+        { new: true, upsert: true, setDefaultsOnInsert: true },
+      );
+
+      entry.items.push(...items);
+      entry.totals = calcTotals(entry.items);
+      await entry.save();
+
+      // Fire and forget: Process new items in background to learn from AI
+      processNewFoodItems(items).catch((err) =>
+        console.error("Food Worker Error:", err),
+      );
+
+      // Increment usage count for the user since request was successful
+      if (req.incrementAIUsage) {
+        await req.incrementAIUsage();
+      }
+
+      return res.json(entry);
+    } catch (error) {
+      return next(error);
     }
-
-    const parsed = validateOrThrow(
-      aiItemsSchema,
-      aiData,
-      "Invalid AI response",
-    );
-    const items = parsed.items.map((item) => ({
-      label: item.label,
-      qty: item.qty,
-      unit: item.unit,
-      kcal: item.kcal,
-      protein_g: item.protein_g,
-      carbs_g: item.carbs_g,
-      meal: payload.meal || item.meal || "other",
-      fat_g: item.fat_g,
-      source: "ai",
-    }));
-
-    const entry = await DiaryEntry.findOneAndUpdate(
-      { userId: req.user.id, date },
-      { $setOnInsert: { userId: req.user.id, date } },
-      { new: true, upsert: true, setDefaultsOnInsert: true },
-    );
-
-    entry.items.push(...items);
-    entry.totals = calcTotals(entry.items);
-    await entry.save();
-
-    // Fire and forget: Process new items in background to learn from AI
-    processNewFoodItems(items).catch((err) =>
-      console.error("Food Worker Error:", err),
-    );
-
-    return res.json(entry);
-  } catch (error) {
-    return next(error);
-  }
-});
+  },
+);
 
 router.post("/diary/:date/copy-range", async (req, res, next) => {
   try {

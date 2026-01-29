@@ -91,6 +91,14 @@ export const useDiaryStore = defineStore("diary", {
           authStore.showUpgradeModal = true;
           return false; // Don't set this.error to avoid ugly banner
         }
+        if (err.response?.status === 429) {
+          this.error = "Muitas requisições. Por favor, aguarde um momento.";
+          return false;
+        }
+        if (err.response?.data?.error?.code === "AI_DAILY_QUOTA_EXCEEDED") {
+          this.error = err.response.data.error.message;
+          return false;
+        }
         this.error =
           err?.response?.data?.error?.message || "Erro ao processar IA";
         return false;

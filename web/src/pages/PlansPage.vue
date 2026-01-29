@@ -59,7 +59,12 @@
                 <ul class="features-list">
                     <li>
                         <span class="check">✓</span>
-                        <span><strong>Créditos ILIMITADOS</strong> de IA</span>
+                        <span>
+                            <strong>Créditos ILIMITADOS</strong> de IA
+                            <span style="display: block; font-size: 0.75rem; color: var(--color-text-muted); margin-top: 2px;">
+                                (Limite de uso justo: 50 requests/dia)
+                            </span>
+                        </span>
                     </li>
                     <li>
                         <span class="check">✓</span>
