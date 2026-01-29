@@ -10,6 +10,8 @@ const env = require("./config/env");
 
 const app = express();
 
+app.set("trust proxy", 1); // Indispensável para pegar o IP real através do Nginx
+
 // Security Headers
 app.use(helmet());
 
