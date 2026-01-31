@@ -36,6 +36,16 @@ const routes = [
     component: () => import("../pages/ResetPasswordPage.vue"),
     meta: { guestOnly: true },
   },
+  {
+    path: "/success",
+    component: () => import("../pages/SuccessPage.vue"),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: "/cancel",
+    component: () => import("../pages/CancelPage.vue"),
+    meta: { requiresAuth: true },
+  },
 ];
 
 const router = createRouter({

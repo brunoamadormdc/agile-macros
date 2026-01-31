@@ -21,6 +21,10 @@ const UserSchema = new mongoose.Schema(
     resetPasswordExpires: { type: Date, default: null },
     dailyAIUsageCount: { type: Number, default: 0 },
     lastAIRequestDate: { type: Date, default: Date.now },
+    stripeCustomerId: { type: String, default: null },
+    stripeSubscriptionId: { type: String, default: null },
+    subscriptionStatus: { type: String, default: null }, // 'active', 'past_due', 'canceled', etc.
+    subscriptionEndDate: { type: Date, default: null },
   },
   { timestamps: true },
 );

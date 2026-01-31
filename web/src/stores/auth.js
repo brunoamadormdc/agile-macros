@@ -81,5 +81,32 @@ export const useAuthStore = defineStore("auth", {
       this.user = null;
       setStoredToken(null);
     },
+    async subscribeToPlus() {
+      try {
+        // Assume API is configured with baseURL
+        const { data } = await api.post("/api/payment/create-checkout-session");
+        if (data.url) {
+          window.location.href = data.url;
+          return true;
+        }
+      } catch (err) {
+        console.error("Subscription error", err);
+        this.error = "Erro ao iniciar checkout.";
+        return false;
+      }
+    },
+    async manageSubscription() {
+      try {
+        const { data } = await api.post("/api/payment/create-portal-session");
+        if (data.url) {
+          window.location.href = data.url;
+          return true;
+        }
+      } catch (err) {
+        console.error("Portal error", err);
+        this.error = "Erro ao acessar portal de assinatura.";
+        return false;
+      }
+    },
   },
 });

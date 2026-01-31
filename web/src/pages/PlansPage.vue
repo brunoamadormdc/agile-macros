@@ -81,8 +81,8 @@
                 </ul>
 
                 <button class="btn full-width" :class="currentPlan === 'plus' ? 'ghost' : 'btn-primary'"
-                    @click="selectPlan('plus')" :disabled="currentPlan === 'plus'">
-                    {{ currentPlan === 'plus' ? 'Seu plano atual' : 'Assinar Plus' }}
+                    @click="selectPlan('plus')">
+                    {{ currentPlan === 'plus' ? 'Gerenciar Assinatura' : 'Assinar Plus' }}
                 </button>
             </div>
         </div>
@@ -165,7 +165,17 @@ const selectedPlanName = computed(() => {
     return selectedPlan.value ? selectedPlan.value.charAt(0).toUpperCase() + selectedPlan.value.slice(1) : '';
 });
 
-function selectPlan(plan) {
+async function selectPlan(plan) {
+    if (plan === 'plus') {
+        if (currentPlan.value === 'plus') {
+            await authStore.manageSubscription();
+        } else {
+            await authStore.subscribeToPlus();
+        }
+        return;
+    }
+    
+    // Legacy/Fallback for other plans if any
     selectedPlan.value = plan;
     // Pre-fill email if available
     if (authStore.user?.email) {

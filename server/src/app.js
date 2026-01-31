@@ -7,6 +7,7 @@ const rateLimit = require("express-rate-limit");
 const routes = require("./routes");
 const { errorHandler, notFoundHandler } = require("./middlewares/error");
 const env = require("./config/env");
+const paymentController = require("./controllers/paymentController");
 
 const app = express();
 
@@ -17,6 +18,13 @@ app.use(helmet());
 
 // CORS - Restricted Origin could be configured here later
 app.use(cors());
+
+// Stripe Webhook - MUST be before express.json() to get raw body
+app.post(
+  "/webhook",
+  express.raw({ type: "application/json" }),
+  paymentController.handleWebhook,
+);
 
 // Body parser
 app.use(express.json({ limit: "10mb" })); // Increased limit for image uploads

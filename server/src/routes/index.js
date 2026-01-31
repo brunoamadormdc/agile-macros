@@ -26,8 +26,12 @@ const crypto = require("crypto");
 const sharp = require("sharp");
 const { aiRateLimiter } = require("../middlewares/rateLimiters");
 const { checkAIUsageLimit } = require("../middlewares/aiQuota");
+const paymentRoutes = require("./payment");
 
 const router = express.Router();
+
+// Mount Payment Routes
+router.use("/payment", paymentRoutes);
 
 const dateParamSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 
