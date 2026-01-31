@@ -21,7 +21,7 @@
                 <ul class="features-list">
                     <li>
                         <span class="check">✓</span>
-                        <span><strong>20 créditos</strong> de IA (Degustação)</span>
+                        <span><strong>10 créditos</strong> de IA (Degustação)</span>
                     </li>
                     <li>
                         <span class="check">✓</span>
