@@ -92,4 +92,9 @@ export function resetPassword(token, password) {
     .then((res) => res.data);
 }
 
+// Analysis
+export function requestWeeklyAnalysis(dateStr) {
+  return api.post('/api/diary/weekly-analysis', { date: dateStr }).then(res => res.data);
+}
+
 export default api;

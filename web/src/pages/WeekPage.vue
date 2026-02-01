@@ -3,9 +3,22 @@
     <h2 class="page-title">Resumo semanal</h2>
     <div v-if="weekStore.loading" class="loading">Carregando...</div>
     <div v-else-if="weekStore.error" class="error">{{ weekStore.error }}</div>
+    <AnalysisModal v-if="showAnalysisModal" :loading="analysisLoading" :content="analysisResult"
+      @close="showAnalysisModal = false" />
+
     <div v-else-if="weekStore.weekSummary" class="stack">
       <section class="card">
         <h3>Meta semanal</h3>
+
+        <!-- Action Button for Analysis -->
+        <div v-if="isTodaySunday" style="margin-bottom: 1rem;">
+          <button class="btn accent full-width" @click="runAnalysis">
+            {{ hasAnalysis ? '📜 Mostrar Análise Semanal' : '🧠 Analisar Semana com IA' }}
+          </button>
+          <p v-if="!hasAnalysis" class="muted text-sm text-center" style="margin-top:0.5rem">
+            Disponível aos domingos se todos os dias estiverem preenchidos (min 3 items).
+          </p>
+        </div>
 
         <div class="tabs" style="margin-bottom: 1rem;">
           <button type="button" :class="['tab', { active: targetStrategy === 'fixed_kcal' }]"
@@ -87,8 +100,9 @@ import { useToast } from 'vue-toastification';
 import { RouterLink } from 'vue-router';
 import { useWeekStore } from '../stores/week';
 import WeekProjectionCard from '../components/WeekProjectionCard.vue';
+import AnalysisModal from '../components/AnalysisModal.vue';
 import { formatDateBR, toISODateLocal } from '../utils/date';
-import { getWeeklyTarget, setWeeklyTarget } from '../services/api';
+import { getWeeklyTarget, setWeeklyTarget, requestWeeklyAnalysis } from '../services/api';
 
 const weekStore = useWeekStore();
 const toast = useToast();
@@ -99,6 +113,20 @@ const targetProtein = ref(0); // Daily
 const targetCarbs = ref(0); // Daily
 const targetFat = ref(0); // Daily
 const saving = ref(false);
+
+// Analysis State
+const showAnalysisModal = ref(false);
+const analysisLoading = ref(false);
+const analysisResult = ref('');
+
+const isTodaySunday = computed(() => {
+  // 0 = Sunday
+  return new Date().getDay() === 0;
+});
+
+const hasAnalysis = computed(() => {
+  return weekStore.weekSummary?.hasAnalysis || false;
+});
 
 const calculatedDailyKcal = computed(() => {
   return (targetProtein.value * 4) + (targetCarbs.value * 4) + (targetFat.value * 9);
@@ -116,6 +144,27 @@ onMounted(() => {
   weekStore.loadWeekSummary(toISODateLocal());
   loadTarget();
 });
+
+async function runAnalysis() {
+  showAnalysisModal.value = true;
+  analysisLoading.value = true;
+  analysisResult.value = '';
+
+  try {
+    const today = toISODateLocal(); // Assuming today is Sunday if button is clicked
+    const data = await requestWeeklyAnalysis(today);
+    analysisResult.value = data.analysis;
+    // If it was a new save, refresh summary to update 'hasAnalysis' status
+    if (!data.saved) {
+      await weekStore.loadWeekSummary(today);
+    }
+  } catch (err) {
+    toast.error(err?.response?.data?.message || err?.response?.data?.error || 'Erro ao gerar análise.');
+    showAnalysisModal.value = false;
+  } finally {
+    analysisLoading.value = false;
+  }
+}
 
 async function loadTarget() {
   try {
