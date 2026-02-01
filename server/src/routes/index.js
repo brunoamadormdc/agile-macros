@@ -9,7 +9,7 @@ const UserSettings = require("../models/UserSettings");
 const User = require("../models/User");
 const { processNewFoodItems } = require("../services/foodWorker");
 const Lead = require("../models/Lead");
-const foodCatalog = require("../data/foodCatalog");
+// const foodCatalog = require("../data/foodCatalog"); // Removed per user request
 const {
   ensureISODate,
   getWeekStart,
@@ -609,36 +609,9 @@ async function callOpenAi({ text, imageDataUrl }) {
   }
 }
 
+// Route /foods/search deprecated and removed.
 router.get("/foods/search", (req, res) => {
-  const query = String(req.query.q || "")
-    .trim()
-    .toLowerCase();
-  if (!query) {
-    return res.json([]);
-  }
-
-  const scored = foodCatalog
-    .map((item) => {
-      const label = item.label.toLowerCase();
-      const aliases = item.aliases.map((alias) => alias.toLowerCase());
-      let score = 0;
-
-      if (label.includes(query)) {
-        score += label.startsWith(query) ? 3 : 2;
-      }
-
-      if (aliases.some((alias) => alias.includes(query))) {
-        score += 1;
-      }
-
-      return { item, score };
-    })
-    .filter((entry) => entry.score > 0)
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 10)
-    .map((entry) => entry.item);
-
-  return res.json(scored);
+  return res.json([]);
 });
 
 router.get("/diary/:date", async (req, res, next) => {
@@ -759,36 +732,7 @@ router.post("/diary/:date/items", async (req, res, next) => {
     let newItem;
 
     if (payload.type === "catalog") {
-      if (!payload.catalogKey) {
-        const err = new Error("catalogKey is required");
-        err.status = 400;
-        throw err;
-      }
-      if (payload.qty == null) {
-        const err = new Error("qty is required for catalog");
-        err.status = 400;
-        throw err;
-      }
-      const catalogItem = foodCatalog.find(
-        (item) => item.key === payload.catalogKey,
-      );
-      if (!catalogItem) {
-        const err = new Error("Catalog item not found");
-        err.status = 404;
-        throw err;
-      }
-      const ratio = payload.qty / catalogItem.servingDefaultQty;
-      newItem = {
-        label: catalogItem.label,
-        qty: payload.qty,
-        unit: catalogItem.unitDefault,
-        kcal: round2(catalogItem.kcal * ratio),
-        protein_g: round2(catalogItem.protein_g * ratio),
-        carbs_g: round2(catalogItem.carbs_g * ratio),
-        fat_g: round2(catalogItem.fat_g * ratio),
-        meal: payload.meal || "other",
-        source: "catalog",
-      };
+       throw new Error("Catalog feature is disabled");
     }
 
     if (payload.type === "preset") {
