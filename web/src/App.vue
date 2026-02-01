@@ -53,15 +53,33 @@
     <!-- Bottom Navigation (Authenticated Only) -->
     <nav class="bottom-nav" v-if="authStore.isAuthenticated">
       <RouterLink to="/today" class="nav-item">
-        <span class="icon">📅</span>
+        <svg class="nav-svg" viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="4" y="6" width="16" height="14" rx="3" />
+          <path d="M8 4v4M16 4v4M4 10h16" />
+          <circle cx="9" cy="13" r="1.1" />
+          <circle cx="13" cy="13" r="1.1" />
+          <circle cx="17" cy="13" r="1.1" />
+          <circle cx="9" cy="17" r="1.1" />
+        </svg>
         <span class="label">Hoje</span>
       </RouterLink>
       <RouterLink to="/week" class="nav-item">
-        <span class="icon">📊</span>
+        <svg class="nav-svg" viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="5" y="11" width="3.5" height="8" rx="1" />
+          <rect x="10.25" y="8" width="3.5" height="11" rx="1" />
+          <rect x="15.5" y="5" width="3.5" height="14" rx="1" />
+        </svg>
         <span class="label">Semana</span>
       </RouterLink>
       <RouterLink to="/calculator" class="nav-item">
-        <span class="icon">🧮</span>
+        <svg class="nav-svg" viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="6" y="4" width="12" height="16" rx="2" />
+          <line x1="6" y1="9" x2="18" y2="9" />
+          <circle cx="10" cy="13" r="0.9" />
+          <circle cx="14" cy="13" r="0.9" />
+          <circle cx="10" cy="17" r="0.9" />
+          <circle cx="14" cy="17" r="0.9" />
+        </svg>
         <span class="label">Calculadora</span>
       </RouterLink>
     </nav>
@@ -137,43 +155,54 @@ function logout() {
   bottom: 0;
   left: 0;
   width: 100%;
-  height: 64px;
-  background: rgba(255, 255, 255, 0.9);
+  height: 68px;
+  background: var(--color-bg-card);
+  background: color-mix(in srgb, var(--color-bg-card) 92%, transparent);
   backdrop-filter: blur(10px);
   border-top: 1px solid var(--color-border);
   display: flex;
   justify-content: space-around;
   align-items: center;
   z-index: 1000;
-  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
-  padding-bottom: env(safe-area-inset-bottom, 0);
-  /* iOS Safe Area */
+  box-shadow: 0 -6px 30px rgba(0, 0, 0, 0.12);
+  padding: 6px clamp(12px, 3vw, 20px) env(safe-area-inset-bottom, 0);
+  gap: 0.75rem;
 }
 
 /* Nav Items */
 .nav-item {
-  display: flex;
+  display: inline-flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   text-decoration: none;
-  color: var(--color-text-light);
-  /* Inactive color */
-  font-size: 0.7rem;
-  font-weight: 500;
-  gap: 4px;
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+  font-weight: 600;
+  gap: 6px;
   flex: 1;
+  min-width: 0;
   height: 100%;
+  padding: 6px 8px;
+  border-radius: 14px;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
 }
 
-.nav-item .icon {
-  font-size: 1.5rem;
-  line-height: 1;
-  opacity: 0.6;
-  filter: grayscale(100%);
-  transition: all 0.2s;
+.nav-item:hover {
+  color: var(--color-text-main);
+  background: var(--color-bg-body);
+}
+
+.nav-svg {
+  width: 22px;
+  height: 22px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.6;
+  opacity: 0.7;
+  transition: all 0.2s ease;
 }
 
 /* Active State */
@@ -181,26 +210,14 @@ function logout() {
   color: var(--color-primary);
 }
 
-.nav-item.router-link-active .icon {
+.nav-item.router-link-active .nav-svg {
   opacity: 1;
-  filter: none;
-  transform: translateY(-2px);
+  transform: translateY(-1px);
 }
 
 /* Active Indicator Dot (Optional style enhancement) */
 .nav-item.router-link-active::after {
-  content: '';
-  position: absolute;
-  top: 6px;
-  right: 50%;
-  transform: translateX(50%);
-  margin-right: -10px;
-  /* Offset to side */
-  width: 4px;
-  height: 4px;
-  background: var(--color-primary);
-  border-radius: 50%;
-  opacity: 0;
+  content: none;
 }
 
 .logo-area {

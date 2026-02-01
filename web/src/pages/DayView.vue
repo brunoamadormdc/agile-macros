@@ -40,7 +40,7 @@
     <div v-else class="stack">
       <!-- Stats Tabs -->
       <section class="card">
-        <div class="tabs">
+        <div class="tabs scrollable-tabs">
           <button type="button" :class="['tab', { active: statsTab === 'day' }]" @click="statsTab = 'day'">
             📅 Dia
           </button>
@@ -63,7 +63,7 @@
 
       <!-- Main Content Tabs -->
       <section class="card">
-        <div class="tabs">
+        <div class="tabs scrollable-tabs">
           <button type="button" :class="['tab', { active: mainTab === 'add' }]" @click="mainTab = 'add'">
             ➕ Adicionar
           </button>
@@ -81,7 +81,7 @@
         </div>
 
         <!-- Copy / Tools Section -->
-        <div v-show="mainTab === 'copy'" style="margin-top: 1rem;">
+        <div v-show="mainTab === 'copy'" class="copy-panel">
           <div v-if="isFreePlan" class="empty-state">
             <h3>🔒 Funcionalidade Premium</h3>
             <p>Faça um upgrade para copiar refeições em massa e economizar tempo.</p>
@@ -89,22 +89,36 @@
               Ver Planos
             </button>
           </div>
-          <div v-else>
-            <h2>Copiar itens para intervalo</h2>
-            <p class="muted">
-              Copia os itens de {{ formatDateBR(currentDate) }} para um intervalo de datas.
-            </p>
-            <div class="grid-2">
+          <div v-else class="copy-body">
+            <header class="copy-head">
+              <div>
+                <p class="eyebrow">Automatizar semana</p>
+                <h2>Copiar itens para intervalo</h2>
+                <p class="muted">
+                  Duplica os itens de <strong>{{ formatDateBR(currentDate) }}</strong> para um período escolhido.
+                </p>
+              </div>
+              <div class="chip subtle">Seguro: não altera o dia de origem</div>
+            </header>
+
+            <div class="copy-grid">
               <DatePickerInput v-model="copyStart" label="Data inicial" placeholder="dd/mm/aaaa" />
               <DatePickerInput v-model="copyEnd" label="Data final" placeholder="dd/mm/aaaa" />
             </div>
-            <label class="checkbox" style="margin-top: 1rem;">
+
+            <label class="checkbox copy-check">
               <input v-model="copyOverwrite" type="checkbox" />
-              Sobrescrever itens existentes
+              Sobrescrever itens existentes no intervalo
             </label>
-            <button class="btn" type="button" :disabled="!canCopyRange" @click="handleCopyRange">
-              Copiar itens
-            </button>
+
+            <div class="copy-actions">
+              <button class="btn ghost" type="button" @click="copyStart = ''; copyEnd = ''">
+                Limpar datas
+              </button>
+              <button class="btn primary" type="button" :disabled="!canCopyRange" @click="handleCopyRange">
+                Copiar itens
+              </button>
+            </div>
           </div>
         </div>
 
@@ -371,5 +385,111 @@ watch(
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
   opacity: 0.7;
+}
+
+.copy-panel {
+  margin-top: 1rem;
+}
+
+.copy-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-body);
+}
+
+.copy-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.chip.subtle {
+  background: var(--color-bg-body);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  padding: 0.45rem 0.75rem;
+  border-radius: var(--radius-full);
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.copy-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(240px, 1fr));
+  gap: 1rem;
+}
+
+.copy-check {
+  margin-top: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.copy-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.copy-actions .btn.primary {
+  min-width: 180px;
+}
+
+@media (max-width: 800px) {
+  .copy-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .copy-actions {
+    justify-content: flex-start;
+  }
+
+  .copy-actions .btn.primary {
+    width: 100%;
+  }
+}
+
+.scrollable-tabs {
+  width: 100%;
+  overflow-x: auto;
+  padding: 0.35rem;
+  gap: 0.5rem;
+  background: var(--color-bg-body);
+  border-radius: var(--radius-full);
+}
+
+.scrollable-tabs::-webkit-scrollbar {
+  height: 6px;
+}
+
+.scrollable-tabs::-webkit-scrollbar-thumb {
+  background: var(--color-border-hover);
+  border-radius: 999px;
+}
+
+.scrollable-tabs .tab {
+  white-space: nowrap;
+  flex: 1;
+  min-width: 140px;
+  text-align: center;
+}
+
+@media (min-width: 960px) {
+  .scrollable-tabs {
+    width: fit-content;
+  }
+
+  .scrollable-tabs .tab {
+    flex: 0 0 auto;
+    min-width: 0;
+  }
 }
 </style>

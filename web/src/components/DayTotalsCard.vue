@@ -5,6 +5,15 @@
     </div>
 
     <div class="content">
+      <div class="status-row">
+        <span class="pill" :class="remaining >= 0 ? 'pill-success' : 'pill-danger'">
+          {{ remaining >= 0 ? 'Dentro/abaixo da meta' : 'Acima da meta' }}
+        </span>
+        <span class="hint">
+          {{ remaining >= 0 ? `Você pode consumir ~${Math.round(remaining)} kcal para bater a meta.` : `Reduza ~${Math.abs(Math.round(remaining))} kcal para voltar à meta.` }}
+        </span>
+      </div>
+
       <div class="main-stat">
         <span class="big-number">{{ totals.kcal?.toFixed(0) || 0 }}</span>
         <span class="unit-label">kcal</span>
@@ -35,67 +44,19 @@
       </div>
 
       <div class="macros-grid">
-        <div class="macro-cell">
-          <span class="macro-label">Proteína</span>
+        <div v-for="macro in macroList" :key="macro.key" class="macro-cell">
+          <div class="macro-top">
+            <span class="macro-label">{{ macro.label }}</span>
+            <span class="macro-tag" :class="macro.statusClass">{{ macro.statusText }}</span>
+          </div>
           <div class="value-wrapper">
-            <span class="macro-val">{{ totals.protein_g?.toFixed(1) || 0 }}g</span>
-            <span v-if="targetMacros?.protein_g" class="macro-target">
-              de {{ Math.round(targetMacros.protein_g) }}g
-            </span>
+            <span class="macro-val">{{ macro.value.toFixed(1) }}g</span>
+            <span v-if="macro.target" class="macro-target">de {{ Math.round(macro.target) }}g</span>
           </div>
           <div class="progress-bar mini">
-            <div class="progress-fill"
-              :class="{ 'bg-danger pulse': targetMacros?.protein_g > 0 && totals.protein_g > targetMacros.protein_g }"
-              :style="{ width: calcPercent(totals.protein_g, targetMacros?.protein_g) }"></div>
-
-            <!-- Macro Base Marker -->
-            <div v-if="baseMacros?.protein_g > 0" class="base-marker mini"
-              :style="{ left: calcPercent(baseMacros.protein_g, targetMacros?.protein_g) }">
-              <span class="marker-label">{{ Math.round(baseMacros.protein_g) }}</span>
-              <div class="marker-arrow"></div>
-            </div>
-          </div>
-        </div>
-
-        <div class="macro-cell">
-          <span class="macro-label">Carboidrato</span>
-          <div class="value-wrapper">
-            <span class="macro-val">{{ totals.carbs_g?.toFixed(1) || 0 }}g</span>
-            <span v-if="targetMacros?.carbs_g" class="macro-target">
-              de {{ Math.round(targetMacros.carbs_g) }}g
-            </span>
-          </div>
-          <div class="progress-bar mini">
-            <div class="progress-fill"
-              :class="{ 'bg-danger pulse': targetMacros?.carbs_g > 0 && totals.carbs_g > targetMacros.carbs_g }"
-              :style="{ width: calcPercent(totals.carbs_g, targetMacros?.carbs_g) }"></div>
-
-            <!-- Macro Base Marker -->
-            <div v-if="baseMacros?.carbs_g > 0" class="base-marker mini"
-              :style="{ left: calcPercent(baseMacros.carbs_g, targetMacros?.carbs_g) }">
-              <span class="marker-label">{{ Math.round(baseMacros.carbs_g) }}</span>
-              <div class="marker-arrow"></div>
-            </div>
-          </div>
-        </div>
-
-        <div class="macro-cell">
-          <span class="macro-label">Gordura</span>
-          <div class="value-wrapper">
-            <span class="macro-val">{{ totals.fat_g?.toFixed(1) || 0 }}g</span>
-            <span v-if="targetMacros?.fat_g" class="macro-target">
-              de {{ Math.round(targetMacros.fat_g) }}g
-            </span>
-          </div>
-          <div class="progress-bar mini">
-            <div class="progress-fill"
-              :class="{ 'bg-danger pulse': targetMacros?.fat_g > 0 && totals.fat_g > targetMacros.fat_g }"
-              :style="{ width: calcPercent(totals.fat_g, targetMacros?.fat_g) }"></div>
-
-            <!-- Macro Base Marker -->
-            <div v-if="baseMacros?.fat_g > 0" class="base-marker mini"
-              :style="{ left: calcPercent(baseMacros.fat_g, targetMacros?.fat_g) }">
-              <span class="marker-label">{{ Math.round(baseMacros.fat_g) }}</span>
+            <div class="progress-fill" :class="macro.barClass" :style="{ width: macro.percent }"></div>
+            <div v-if="macro.baseMarker > 0" class="base-marker mini" :style="{ left: macro.baseMarkerPos }">
+              <span class="marker-label">{{ Math.round(macro.baseMarker) }}</span>
               <div class="marker-arrow"></div>
             </div>
           </div>
@@ -132,6 +93,44 @@ const props = defineProps({
 });
 
 const remaining = computed(() => props.target - (props.totals.kcal || 0));
+
+const macroList = computed(() => {
+  const map = [
+    { key: 'protein_g', label: 'Proteína' },
+    { key: 'carbs_g', label: 'Carboidrato' },
+    { key: 'fat_g', label: 'Gordura' },
+  ];
+
+  return map.map((m) => {
+    const value = props.totals?.[m.key] || 0;
+    const target = props.targetMacros?.[m.key] || 0;
+    const base = props.baseMacros?.[m.key] || 0;
+    const pct = target ? Math.min(120, (value / target) * 100) : 0;
+    const status =
+      !target ? 'sem-meta'
+        : pct < 90 ? 'faltando'
+          : pct <= 110 ? 'ok'
+            : 'excedeu';
+    const statusText = {
+      'sem-meta': 'Defina meta',
+      'faltando': 'Falta',
+      'ok': 'Na meta',
+      'excedeu': 'Excedeu'
+    }[status];
+
+    return {
+      ...m,
+      value,
+      target,
+      percent: `${pct}%`,
+      barClass: status === 'excedeu' ? 'bg-danger' : status === 'faltando' ? 'bg-warn' : '',
+      statusClass: `tag-${status}`,
+      statusText,
+      baseMarker: base,
+      baseMarkerPos: calcPercent(base, target),
+    };
+  });
+});
 
 function calcPercent(val, target) {
   if (target <= 0) {
@@ -172,6 +171,35 @@ function calcPercent(val, target) {
   justify-content: center;
 }
 
+.status-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.pill {
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.pill-success {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+.pill-danger {
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+}
+
+.hint {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
 .main-stat {
   display: flex;
   align-items: baseline;
@@ -195,7 +223,7 @@ function calcPercent(val, target) {
 
 .macros-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 0.75rem;
 }
 
@@ -206,6 +234,42 @@ function calcPercent(val, target) {
   display: flex;
   flex-direction: column;
   gap: 6px;
+}
+
+.macro-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.macro-tag {
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 700;
+  border: 1px solid transparent;
+}
+
+.tag-ok {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+.tag-faltando {
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+}
+
+.tag-excedeu {
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+}
+
+.tag-sem-meta {
+  background: var(--color-bg-body);
+  color: var(--color-text-muted);
+  border-color: var(--color-border);
 }
 
 .value-wrapper {
@@ -222,6 +286,10 @@ function calcPercent(val, target) {
 .progress-bar.mini {
   height: 3px;
   margin-top: 2px;
+}
+
+.bg-warn {
+  background: var(--color-warning) !important;
 }
 
 .progress-area {

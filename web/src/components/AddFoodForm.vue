@@ -1,6 +1,6 @@
 <template>
-  <section>
-    <div class="tabs" style="margin-bottom: 2rem;">
+  <section class="add-form">
+    <div class="tabs" style="margin-bottom: 1rem;">
       <button v-for="t in tabs" :key="t" type="button" :class="['tab', { active: currentTab === t }]"
         @click="currentTab = t">
         {{ labels[t] }}
@@ -18,7 +18,7 @@
     </div>
 
     <!-- Manual / Search Tab -->
-    <div v-if="currentTab === 'manual'" class="tab-panel">
+    <div v-if="currentTab === 'manual'" class="tab-panel panel">
       <div class="search-wrapper">
         <label class="field rel">
           Descricao
@@ -63,13 +63,25 @@
         </label>
       </div>
 
-      <button class="btn" type="button" :disabled="!canAddManual" @click="submitManual">
+      <button class="btn primary-wide" type="button" :disabled="!canAddManual" @click="submitManual">
         Adicionar
       </button>
     </div>
 
     <!-- AI Tab -->
-    <div v-else-if="currentTab === 'ai'" class="tab-panel">
+    <div v-else-if="currentTab === 'ai'" class="tab-panel panel ai-panel">
+      <div class="ai-head">
+        <div>
+          <p class="eyebrow">Assistente</p>
+          <h3>Adicionar com IA</h3>
+          <p class="muted">Digite, fale ou envie uma foto das macros e nós calculamos para você.</p>
+        </div>
+        <button type="button" class="chip action" @click="toggleDictation" :class="{ active: isListening }">
+          <span v-if="!isListening">🎙️ Falar</span>
+          <span v-else>🛑 Gravando...</span>
+        </button>
+      </div>
+
       <label class="field rel">
         Descreva o que voce comeu
         <textarea ref="aiInputRef" v-model="aiText" rows="4"
@@ -81,8 +93,12 @@
           <span v-else>🛑</span>
         </button>
       </label>
-      <div class="field">
-        <span class="label">Ou envie uma imagem do alimento ou das macros (opcional)</span>
+
+      <div class="file-block">
+        <div class="file-text">
+          <p class="label tight">Ou envie uma imagem</p>
+          <p class="muted">Foto do prato ou print das macros (opcional).</p>
+        </div>
         <div class="file-upload-wrapper">
           <input id="ai-image-upload" type="file" accept="image/*" class="file-input" @change="onImageChange" />
           <label for="ai-image-upload" class="file-label btn ghost">
@@ -92,7 +108,13 @@
           <span v-if="aiFileName" class="file-name">{{ aiFileName }}</span>
         </div>
       </div>
-      <button class="btn" type="button" :disabled="!canAddAi || loading" @click="submitAi">
+
+      <div class="hint-row">
+        <span class="hint-badge">Dica</span>
+        <span class="muted">Fale em frases curtas: “200g frango grelhado, 1 colher arroz, salada verde”.</span>
+      </div>
+
+      <button class="btn primary-wide" type="button" :disabled="!canAddAi || loading" @click="submitAi">
         {{ loading ? 'Enviando...' : 'Enviar para IA' }}
       </button>
     </div>
@@ -406,26 +428,45 @@ function onImageChange(event) {
   position: relative;
 }
 
+.add-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.panel {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.tab-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
 
 .meal-selector {
-  margin-bottom: 2rem;
+  margin: 0.5rem 0 1rem;
   overflow-x: auto;
+  padding: 0.25rem 0.25rem 0.5rem;
 }
 
 .meal-pills {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.6rem;
   padding-bottom: 4px;
-  /* for scrollbar */
 }
 
 .meal-pill {
-  background: var(--color-bg-body);
+  background: color-mix(in srgb, var(--color-bg-body) 80%, transparent);
   border: 1px solid var(--color-border);
-  border-radius: 20px;
-  padding: 6px 12px;
-  font-size: 0.85rem;
-  color: var(--color-text-muted);
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-size: 0.9rem;
+  color: var(--color-text-main);
   cursor: pointer;
   white-space: nowrap;
   transition: all 0.2s;
@@ -434,12 +475,12 @@ function onImageChange(event) {
 .meal-pill.active {
   background: var(--color-primary-light);
   border-color: var(--color-primary);
-  color: var(--color-primary);
-  font-weight: 600;
+  color: var(--color-primary-dark);
+  font-weight: 700;
 }
 
 .search-wrapper {
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
 }
 
 .dropdown {
@@ -469,6 +510,142 @@ function onImageChange(event) {
 
 .dropdown-item:hover {
   background: var(--color-bg-body);
+}
+
+.ai-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.chip.action {
+  background: var(--color-bg-body);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-main);
+  padding: 0.5rem 0.85rem;
+  border-radius: var(--radius-full);
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.chip.action:hover {
+  border-color: var(--color-border-hover);
+  background: color-mix(in srgb, var(--color-bg-body) 80%, var(--color-bg-card));
+}
+
+.chip.action.active {
+  border-color: var(--color-primary);
+  color: var(--color-primary-dark);
+  background: var(--color-primary-light);
+}
+
+.file-block {
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.file-text {
+  flex: 1;
+  min-width: 200px;
+}
+
+.label.tight {
+  margin: 0 0 0.25rem;
+}
+
+.file-upload-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.file-name {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
+.hint-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  background: var(--color-bg-body);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 0.65rem 0.8rem;
+}
+
+.hint-badge {
+  background: var(--color-primary-light);
+  color: var(--color-primary-dark);
+  font-weight: 700;
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--radius-full);
+  font-size: 0.85rem;
+}
+
+.qty-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 1rem;
+}
+
+.grid-macros {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(120px, 1fr));
+  gap: 0.75rem;
+}
+
+.primary-wide {
+  align-self: flex-start;
+  min-width: 180px;
+}
+
+@media (max-width: 960px) {
+  .panel {
+    padding: 1rem;
+  }
+
+  .grid-macros {
+    grid-template-columns: repeat(2, minmax(140px, 1fr));
+  }
+
+  .primary-wide {
+    width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .qty-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .grid-macros {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .meal-selector {
+    margin-top: 0.25rem;
+  }
+
+  .file-block {
+    padding: 0.75rem;
+  }
+
+  .file-upload-wrapper {
+    width: 100%;
+    justify-content: space-between;
+  }
 }
 
 /* Modal Styles Reuse */

@@ -9,38 +9,67 @@
       <div v-for="mealKey in mealOrder" :key="mealKey">
         <div v-if="groupedItems[mealKey].length > 0" class="meal-group">
           <div class="meal-header">
-            <h3>{{ mealLabels[mealKey] }}</h3>
+            <div class="meal-title">
+              <h3>{{ mealLabels[mealKey] }}</h3>
+              <span class="meal-count">{{ groupedItems[mealKey].length }} item<span v-if="groupedItems[mealKey].length > 1">s</span></span>
+            </div>
             <div class="meal-totals">
-              <span>{{ getGroupTotals(groupedItems[mealKey]).kcal.toFixed(0) }} kcal</span>
-              <span class="macro-mini">P: {{ getGroupTotals(groupedItems[mealKey]).protein_g.toFixed(0) }}</span>
-              <span class="macro-mini">C: {{ getGroupTotals(groupedItems[mealKey]).carbs_g.toFixed(0) }}</span>
-              <span class="macro-mini">G: {{ getGroupTotals(groupedItems[mealKey]).fat_g.toFixed(0) }}</span>
+              <span class="macro-chip kcal">
+                <strong>{{ mealTotals[mealKey].kcal.toFixed(0) }}</strong>
+                <small>kcal</small>
+              </span>
+              <span class="macro-chip">
+                <strong>{{ mealTotals[mealKey].protein_g.toFixed(0) }}g</strong>
+                <small>Prot</small>
+              </span>
+              <span class="macro-chip">
+                <strong>{{ mealTotals[mealKey].carbs_g.toFixed(0) }}g</strong>
+                <small>Carb</small>
+              </span>
+              <span class="macro-chip">
+                <strong>{{ mealTotals[mealKey].fat_g.toFixed(0) }}g</strong>
+                <small>Gord</small>
+              </span>
             </div>
           </div>
 
           <ul class="items-list">
-            <li v-for="item in groupedItems[mealKey]" :key="item.originalIndex">
-              <div v-if="editingIndex !== item.originalIndex" style="width: 100%;">
-                <div class="item-row">
-                  <div class="item-info">
-                    <p class="item-title">{{ item.label }}</p>
-                    <p class="muted">
-                      {{ item.qty }} {{ item.unit }}
-                    </p>
-                  </div>
+            <li v-for="item in groupedItems[mealKey]" :key="item.originalIndex" class="food-card">
+              <div v-if="editingIndex !== item.originalIndex" class="food-card-body">
+                <div class="item-info">
+                  <p class="item-title">{{ item.label }}</p>
+                  <p class="muted item-qty">
+                    {{ item.qty }} {{ item.unit }}
+                  </p>
+                </div>
 
-                  <div class="item-right-side">
-                    <div class="item-stats">
+                <div class="item-meta">
+                  <div class="macro-badges">
+                    <span class="macro-chip kcal">
                       <strong>{{ item.kcal.toFixed(0) }}</strong>
                       <small>kcal</small>
-                    </div>
+                    </span>
+                    <span class="macro-chip">
+                      <strong>{{ item.protein_g.toFixed(0) }}g</strong>
+                      <small>P</small>
+                    </span>
+                    <span class="macro-chip">
+                      <strong>{{ item.carbs_g.toFixed(0) }}g</strong>
+                      <small>C</small>
+                    </span>
+                    <span class="macro-chip">
+                      <strong>{{ item.fat_g.toFixed(0) }}g</strong>
+                      <small>G</small>
+                    </span>
+                  </div>
 
-                    <div class="item-actions">
-                      <button class="btn-icon" title="Editar" @click="startEdit(item, item.originalIndex)">✏️</button>
-                      <button class="btn-icon" title="Duplicar" @click="$emit('duplicate', item)">📋</button>
-                      <button class="btn-icon danger" title="Remover"
-                        @click="$emit('remove', item.originalIndex)">🗑️</button>
-                    </div>
+                  <div class="item-actions">
+                    <button class="btn-icon" title="Editar" aria-label="Editar item"
+                      @click="startEdit(item, item.originalIndex)">✎</button>
+                    <button class="btn-icon" title="Duplicar" aria-label="Duplicar item"
+                      @click="$emit('duplicate', item)">⧉</button>
+                    <button class="btn-icon danger" title="Remover" aria-label="Remover item"
+                      @click="$emit('remove', item.originalIndex)">✕</button>
                   </div>
                 </div>
               </div>
@@ -141,6 +170,14 @@ const groupedItems = computed(() => {
   return groups;
 });
 
+const mealTotals = computed(() => {
+  const totals = {};
+  mealOrder.forEach((meal) => {
+    totals[meal] = getGroupTotals(groupedItems.value[meal]);
+  });
+  return totals;
+});
+
 function getGroupTotals(groupItems) {
   return groupItems.reduce((acc, item) => ({
     kcal: acc.kcal + item.kcal,
@@ -217,6 +254,8 @@ function saveEdit(index) {
   border-bottom: 2px solid var(--color-border);
   padding-bottom: 0.5rem;
   margin-bottom: 1rem;
+  gap: 1rem;
+  flex-wrap: wrap;
 }
 
 .meal-header h3 {
@@ -225,110 +264,159 @@ function saveEdit(index) {
   margin: 0;
 }
 
-.meal-totals {
-  font-size: 0.9rem;
-  color: var(--color-text-muted);
+.meal-title {
   display: flex;
-  gap: 0.75rem;
-  align-items: center;
+  flex-direction: column;
+  gap: 0.25rem;
 }
 
-.macro-mini {
-  font-size: 0.75rem;
+.meal-count {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.meal-totals {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.macro-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.4rem 0.65rem;
   background: var(--color-bg-body);
-  padding: 2px 6px;
-  border-radius: 4px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  color: var(--color-text-main);
+  font-size: 0.8rem;
+  min-width: 62px;
+  justify-content: center;
+}
+
+.macro-chip small {
+  color: var(--color-text-muted);
+}
+
+.macro-chip strong {
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.macro-chip.kcal {
+  background: var(--color-primary-light);
+  border-color: transparent;
+  color: var(--color-primary-dark);
 }
 
 .items-list {
   list-style: none;
   padding: 0;
   margin: 0;
+  display: grid;
+  gap: 1rem;
 }
 
-.items-list li {
-  padding: 1.5rem 0.75rem;
-  border-bottom: 1px solid var(--color-border);
-  transition: background-color 0.2s;
+.food-card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-body);
+  padding: 1rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  box-shadow: var(--shadow-sm);
 }
 
-.items-list li:hover {
-  background-color: var(--color-bg-body);
-  border-radius: 8px;
-  /* Slight radius on hover */
+.food-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--color-border-hover);
+  box-shadow: var(--shadow-md);
 }
 
-.items-list li:last-child {
-  border-bottom: none;
-}
-
-.item-row {
+.food-card-body {
   display: flex;
+  gap: 1rem;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   width: 100%;
-  /* Force full width */
 }
 
 .item-info {
   flex: 1;
-  padding-right: 1rem;
+  min-width: 0;
 }
 
-.item-right-side {
+.item-title {
+  margin: 0;
+  font-weight: 700;
+  font-size: 1.02rem;
+  line-height: 1.3;
+  color: var(--color-text-main);
+}
+
+.item-qty {
+  margin: 0.25rem 0 0;
+}
+
+.item-meta {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  margin-left: auto;
-  /* Crucial: Push this block to the far right */
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
-.item-stats {
-  text-align: right;
+.macro-badges {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  /* Force align right */
-  justify-content: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .item-actions {
-  display: flex;
-  gap: 0.5rem;
-  opacity: 0.8;
-  /* Make them more visible by default */
+  display: inline-flex;
+  gap: 0.35rem;
+  opacity: 0.9;
   transition: opacity 0.2s;
 }
 
-.items-list li:hover .item-actions {
+.food-card:hover .item-actions {
   opacity: 1;
 }
 
 .btn-icon {
-  border: 1px solid transparent;
-  /* Prepare for border on hover */
+  border: 1px solid var(--color-border);
   background: transparent;
   cursor: pointer;
-  font-size: 1.2rem;
-  padding: 8px;
-  border-radius: 8px;
+  font-size: 1rem;
+  padding: 6px;
+  border-radius: var(--radius-full);
   line-height: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--color-text-muted);
+  min-width: 36px;
+  transition: all 0.15s ease;
 }
 
 .btn-icon:hover {
-  background: var(--color-bg-body);
-  border-color: var(--color-border);
+  background: var(--color-bg-card);
+  border-color: var(--color-border-hover);
   color: var(--color-text-main);
   transform: translateY(-1px);
 }
 
+.btn-icon.danger {
+  border-color: rgba(239, 68, 68, 0.25);
+  color: var(--color-danger);
+}
+
 .btn-icon.danger:hover {
-  background: #fee2e2;
-  border-color: #fca5a5;
+  background: var(--color-danger-bg);
+  border-color: var(--color-danger);
   color: var(--color-danger);
 }
 
@@ -357,5 +445,55 @@ function saveEdit(index) {
   display: flex;
   justify-content: flex-end;
   gap: 0.5rem;
+}
+
+@media (max-width: 960px) {
+  .food-card-body {
+    flex-direction: column;
+  }
+
+  .item-meta {
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .item-actions {
+    order: 2;
+  }
+
+  .macro-badges {
+    flex: 1;
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 640px) {
+  .meal-header {
+    align-items: flex-start;
+  }
+
+  .meal-totals {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .food-card {
+    padding: 0.875rem;
+  }
+
+  .item-meta {
+    gap: 0.5rem;
+  }
+
+  .macro-chip {
+    font-size: 0.78rem;
+    padding: 0.35rem 0.55rem;
+  }
+
+  .btn-icon {
+    padding: 6px;
+    min-width: 36px;
+  }
 }
 </style>
