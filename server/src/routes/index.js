@@ -32,132 +32,133 @@ const paymentRoutes = require("./payment");
 const router = express.Router();
 const { generateWeeklyAnalysis } = require("../services/analysisService");
 
-const sundayDateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine(dateStr => {
-  const d = new Date(dateStr);
-  // Check if actually Sunday (0).
-  // Note: new Date("YYYY-MM-DD") is UTC. "2023-10-29" -> Sunday.
-  // getDay() depends on local if not UTC.
-  // Let's use parsers from utils/dates if possible or simple UTC check.
-  // Actually, let's keep it simple: The logic below will handle validation.
-  return true; 
-});
+const sundayDateSchema = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/)
+  .refine((dateStr) => {
+    const d = new Date(dateStr);
+    // Check if actually Sunday (0).
+    // Note: new Date("YYYY-MM-DD") is UTC. "2023-10-29" -> Sunday.
+    // getDay() depends on local if not UTC.
+    // Let's use parsers from utils/dates if possible or simple UTC check.
+    // Actually, let's keep it simple: The logic below will handle validation.
+    return true;
+  });
 
 router.post("/diary/weekly-analysis", requireAuth, async (req, res, next) => {
   try {
     const { date } = req.body; // Expecting the "Sunday" date
     if (!date) throw new Error("Date is required");
-    
+
     // 1. Verify Sunday
     // We use the utils to parse correctly locally/UTC as the app does
     const { listWeekDates, getWeekStart } = require("../utils/dates");
-    
+
     // We expect the user to send the Sunday date.
     // Calculate week start (Monday)
     // If date is Sunday, getWeekStart(date) returns Monday of that week.
     const weekStart = getWeekStart(date);
     const weekDates = listWeekDates(weekStart); // [Mon, Tue, ..., Sun]
-    
+
     // Confirm the `date` matches the last day (Sunday)
     if (weekDates[6] !== date) {
-       return res.status(400).json({ error: "Date must be a Sunday" });
+      return res.status(400).json({ error: "Date must be a Sunday" });
     }
 
     // 0. Check if analysis already exists
     const existingReview = await WeeklyReview.findOne({
       userId: req.user.id,
-      weekStartDate: weekStart
+      weekStartDate: weekStart,
     });
 
     if (existingReview) {
-       // Return existing analysis immediately
-       return res.json({ analysis: existingReview.analysis, saved: true });
+      // Return existing analysis immediately
+      return res.json({ analysis: existingReview.analysis, saved: true });
     }
 
     // 2. Fetch all entries
     const entries = await DiaryEntry.find({
       userId: req.user.id,
-      date: { $in: weekDates }
+      date: { $in: weekDates },
     });
 
     // 3. Validate 3 items rule
     // Map entries by date for easy lookup
     const entriesMap = {};
-    entries.forEach(e => entriesMap[e.date] = e);
+    entries.forEach((e) => (entriesMap[e.date] = e));
 
     const fullDaysData = [];
-    
+
     for (const d of weekDates) {
       const entry = entriesMap[d];
       const itemCount = entry && entry.items ? entry.items.length : 0;
-      
+
       if (itemCount < 3) {
-         return res.status(400).json({ 
-           error: "Week incomplete", 
-           message: `Day ${d} has fewer than 3 items. Fill all days to unlock.` 
-         });
+        return res.status(400).json({
+          error: "Week incomplete",
+          message: `Day ${d} has fewer than 3 items. Fill all days to unlock.`,
+        });
       }
-      
+
       fullDaysData.push({
         date: d,
-        weekday: new Date(d).toLocaleDateString("pt-BR", { weekday: 'short' }),
+        weekday: new Date(d).toLocaleDateString("pt-BR", { weekday: "short" }),
         totals: entry.totals, // { kcal, protein_g ... }
-        foods: entry.items.map(i => i.label || "Unknown")
+        foods: entry.items.map((i) => i.label || "Unknown"),
       });
     }
 
     // 4. Retrieve Targets
     const settings = await UserSettings.findOne({ userId: req.user.id });
-    
+
     // Default Daily Targets if not found
     const defaultDaily = { kcal: 2000, protein: 150, carbs: 200, fat: 60 };
 
     let weeklyTargets;
 
     if (settings) {
-       // Database stores WEEKLY targets directly
-       weeklyTargets = {
-          kcal: settings.weeklyTargetKcal,
-          protein: settings.weeklyTargetProtein_g,
-          carbs: settings.weeklyTargetCarbs_g,
-          fat: settings.weeklyTargetFat_g
-       };
+      // Database stores WEEKLY targets directly
+      weeklyTargets = {
+        kcal: settings.weeklyTargetKcal,
+        protein: settings.weeklyTargetProtein_g,
+        carbs: settings.weeklyTargetCarbs_g,
+        fat: settings.weeklyTargetFat_g,
+      };
     } else {
-       // Use defaults * 7
-       weeklyTargets = {
-          kcal: defaultDaily.kcal * 7,
-          protein: defaultDaily.protein * 7,
-          carbs: defaultDaily.carbs * 7,
-          fat: defaultDaily.fat * 7
-       };
+      // Use defaults * 7
+      weeklyTargets = {
+        kcal: defaultDaily.kcal * 7,
+        protein: defaultDaily.protein * 7,
+        carbs: defaultDaily.carbs * 7,
+        fat: defaultDaily.fat * 7,
+      };
     }
 
     // 5. Call AI Service
     // Check Quota first? We can reuse checkAIUsageLimit middleware if we attach it to route.
-    // Ideally we should deduct credits. 
+    // Ideally we should deduct credits.
     // For now, let's assume "Free" users can't do this or it costs 1 credit?
     // User didn't specify strict credit cost for this, but implies it's a premium feature or just standard AI.
-    // Let's rely on standard AI quota if attached, or just run it. 
+    // Let's rely on standard AI quota if attached, or just run it.
     // I'll skip explicit credit deduction for this MVP step unless requested.
 
     const analysis = await generateWeeklyAnalysis({
-       targets: weeklyTargets,
-       days: fullDaysData
+      targets: weeklyTargets,
+      days: fullDaysData,
     });
 
     // 6. Save valid analysis
     await WeeklyReview.create({
-       userId: req.user.id,
-       weekStartDate: weekStart,
-       analysis: analysis
+      userId: req.user.id,
+      weekStartDate: weekStart,
+      analysis: analysis,
     });
 
     return res.json({ analysis, saved: false });
-
   } catch (error) {
     return next(error);
   }
 });
-
 
 // Mount Payment Routes
 router.use("/payment", paymentRoutes);
@@ -831,6 +832,7 @@ const copyRangeSchema = z.object({
   startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   overwrite: z.boolean().optional(),
+  selectedIndices: z.array(z.number()).optional(),
 });
 
 function cloneItem(item) {
@@ -861,7 +863,7 @@ router.post("/diary/:date/items", async (req, res, next) => {
     let newItem;
 
     if (payload.type === "catalog") {
-       throw new Error("Catalog feature is disabled");
+      throw new Error("Catalog feature is disabled");
     }
 
     if (payload.type === "preset") {
@@ -1157,7 +1159,15 @@ router.post("/diary/:date/copy-range", async (req, res, next) => {
       (date) => date !== sourceDate,
     );
 
-    const itemsToCopy = sourceEntry.items.map((item) => cloneItem(item));
+    let sourceItems = sourceEntry.items;
+
+    if (payload.selectedIndices && payload.selectedIndices.length > 0) {
+      sourceItems = sourceItems.filter((_, index) =>
+        payload.selectedIndices.includes(index),
+      );
+    }
+
+    const itemsToCopy = sourceItems.map((item) => cloneItem(item));
     const results = [];
 
     for (const date of dates) {
@@ -1420,9 +1430,9 @@ router.get("/week/summary", requireAuth, async (req, res, next) => {
       remainingDays > 0 ? round2(remainingWeekKcal / remainingDays) : 0;
 
     // Check if Weekly Analysis exists for this week
-    const hasAnalysis = await WeeklyReview.exists({ 
-       userId: req.user.id,
-       weekStartDate: weekStart
+    const hasAnalysis = await WeeklyReview.exists({
+      userId: req.user.id,
+      weekStartDate: weekStart,
     });
 
     // Dynamic Daily Macros Target (Smart Balance)

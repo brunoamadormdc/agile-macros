@@ -101,6 +101,27 @@
               <div class="chip subtle">Seguro: não altera o dia de origem</div>
             </header>
 
+            <!-- Selection List -->
+            <div class="selection-box">
+              <div class="selection-header">
+                <span class="selection-title">Selecione os itens ({{ selectedIndices.length }}/{{ diaryItems.length }})</span>
+                <div class="selection-controls">
+                  <button type="button" class="btn-link" @click="selectAll">Todos</button>
+                  <button type="button" class="btn-link" @click="selectNone">Nenhum</button>
+                </div>
+              </div>
+              <div class="selection-list">
+                <label v-for="(item, index) in diaryItems" :key="index" class="selection-item"
+                  :class="{ checked: selectedIndices.includes(index) }">
+                  <input type="checkbox" :value="index" v-model="selectedIndices">
+                  <span class="item-info">
+                    <strong>{{ item.label }}</strong>
+                    <small>{{ item.qty }} {{ item.unit }} • {{ Math.round(item.kcal) }} kcal</small>
+                  </span>
+                </label>
+              </div>
+            </div>
+
             <div class="copy-grid">
               <DatePickerInput v-model="copyStart" label="Data inicial" placeholder="dd/mm/aaaa" />
               <DatePickerInput v-model="copyEnd" label="Data final" placeholder="dd/mm/aaaa" />
@@ -168,6 +189,23 @@ const copyStart = ref('');
 const copyEnd = ref('');
 const copyOverwrite = ref(true);
 const canCopyRange = computed(() => Boolean(copyStart.value && copyEnd.value));
+const selectedIndices = ref([]);
+
+watch(() => diaryItems.value, (newItems) => {
+  if (newItems && newItems.length > 0) {
+    selectedIndices.value = newItems.map((_, i) => i);
+  } else {
+    selectedIndices.value = [];
+  }
+}, { immediate: true });
+
+function selectAll() {
+  selectedIndices.value = diaryItems.value.map((_, i) => i);
+}
+
+function selectNone() {
+  selectedIndices.value = [];
+}
 
 const mainTab = ref('add'); // 'add' | 'copy' | 'list'
 const statsTab = ref('day'); // 'day' | 'week'
@@ -228,6 +266,7 @@ async function handleCopyRange() {
     startDate: copyStart.value,
     endDate: copyEnd.value,
     overwrite: copyOverwrite.value,
+    selectedIndices: selectedIndices.value,
   });
   if (ok) {
     toast.success('Itens copiados!');
@@ -491,5 +530,85 @@ watch(
     flex: 0 0 auto;
     min-width: 0;
   }
+}
+
+/* Copy Selection Styles */
+.selection-box {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.selection-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: var(--color-bg-body);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.selection-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.selection-controls {
+  display: flex;
+  gap: 1rem;
+}
+
+.btn-link {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--color-primary);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.selection-list {
+  max-height: 240px;
+  overflow-y: auto;
+  padding: 0.5rem;
+}
+
+.selection-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.selection-item:hover {
+  background: var(--color-bg-body);
+}
+
+.selection-item.checked {
+  background: var(--color-primary-light);
+  border: 1px solid var(--color-primary-light);
+}
+
+.item-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.item-info strong {
+  font-size: 0.95rem;
+  color: var(--color-text-main);
+}
+
+.item-info small {
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
 }
 </style>
