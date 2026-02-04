@@ -104,7 +104,8 @@
             <!-- Selection List -->
             <div class="selection-box">
               <div class="selection-header">
-                <span class="selection-title">Selecione os itens ({{ selectedIndices.length }}/{{ diaryItems.length }})</span>
+                <span class="selection-title">Selecione os itens ({{ selectedIndices.length }}/{{ diaryItems.length
+                  }})</span>
                 <div class="selection-controls">
                   <button type="button" class="btn-link" @click="selectAll">Todos</button>
                   <button type="button" class="btn-link" @click="selectNone">Nenhum</button>
@@ -187,7 +188,7 @@ const diaryItems = computed(() => diaryStore.diary?.items || []);
 const diaryTotals = computed(() => diaryStore.diary?.totals || { kcal: 0, protein_g: 0, carbs_g: 0, fat_g: 0 });
 const copyStart = ref('');
 const copyEnd = ref('');
-const copyOverwrite = ref(true);
+const copyOverwrite = ref(false);
 const canCopyRange = computed(() => Boolean(copyStart.value && copyEnd.value));
 const selectedIndices = ref([]);
 
