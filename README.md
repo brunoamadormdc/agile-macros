@@ -1,78 +1,63 @@
-# MacroWeek 🥗⚡
+# MacroWeek
 
-> O fim do "Dia do Lixo". Controle sua dieta com liberdade, Inteligência Artificial e estratégia de Saldo Semanal.
+App de diário alimentar com foco em saldo semanal, metas dinâmicas e recursos assistidos por IA.
 
-O **MacroWeek** é uma plataforma completa de nutrição que combina simplicidade de uso com estratégias avançadas de dieta flexível. Diferente de apps tradicionais que zeram sua meta à meia-noite, o MacroWeek foca no **Balanço Semanal**, permitindo que você coma o que gosta sem culpa, desde que compense ao longo da semana.
+## Estrutura
 
-![MacroWeek Cover](https://via.placeholder.com/800x400?text=MacroWeek+Preview)
+```text
+/
+├── server/        # API Express + MongoDB
+├── web/           # SPA Vue 3 + Vite
+├── landing_page/  # Site institucional em Nuxt
+└── PROJECT_HANDOVER.md
+```
 
-## ✨ Principais Diferenciais
+## Stack
 
-- **🎙️ Voice-to-Log**: Fale o que comeu ("Arroz com feijão e frango") e a IA reconhece e registra os macros em segundos.
-- **📉 Saldo Semanal Inteligente**: Exagerou no sábado? O app recalcula automaticamente sua meta diária para os dias restantes, diluindo o excesso sem te deixar passar fome.
-- **📋 Smart Copy**: Ferramentas poderosas para quem come a mesma coisa. Copie refeições ou dias inteiros com um clique.
-- **🌓 Dark Mode Nativo**: Interface pensada para uso constante, com tema escuro que descansa a vista.
-- **📲 PWA (Progressive Web App)**: Instale no celular sem passar pela loja de apps. Funciona offline e gasta menos bateria.
+- Backend: Node.js, Express, Mongoose, JWT, Zod
+- Web app: Vue 3, Vite, Pinia, Vue Router
+- Landing page: Nuxt
+- Integrações: OpenAI, Stripe, Nodemailer
 
----
+## Rodando Localmente
 
-## 🛠️ Stack Tecnológico
+Pré-requisitos:
 
-O projeto utiliza uma arquitetura **Monorepo** moderna e performática:
+- Node.js 18+
+- MongoDB local ou remoto
 
-### 🎨 Frontend (Web App)
-
-- **Framework**: Vue.js 3 + Vite
-- **State Management**: Pinia
-- **Estilização**: CSS Moderno (Variáveis, Flexbox/Grid) sem frameworks pesados.
-- **PWA**: Vite PWA Plugin
-
-### 📢 Landing Page
-
-- **Framework**: Nuxt 3 (SSR para SEO otimizado)
-- **Design**: Responsivo e focado em conversão.
-
-### ⚙️ Backend (API)
-
-- **Runtime**: Node.js + Express
-- **Banco de Dados**: MongoDB (Mongoose)
-- **Segurança**: JWT Auth, Bcrypt.
-- **IA**: Integração com OpenAI (GPT-4o/Flash) para processamento de linguagem natural.
-
----
-
-## 🚀 Como Rodar Localmente
-
-Pré-requisitos: Node.js 18+ e MongoDB rodando localmente (ou URI externa).
-
-### 1. Backend (API)
+### Backend
 
 ```bash
 cd server
 npm install
-
-# Crie um arquivo .env na pasta server com:
-# PORT=3001
-# MONGO_URI=mongodb://localhost:27017/app_counter
-# JWT_SECRET=sua_chave_secreta
-# OPENAI_API_KEY=sk-...
-
+cp .env.example .env
 npm run dev
 ```
 
-_O servidor rodará em `http://localhost:3001`_
+Default: `http://localhost:4000`
 
-#### Importação de Dados (Obrigatório)
+Variáveis mínimas:
 
-Para que a busca de alimentos funcione, você deve popular o banco com a tabela TACO:
+```env
+PORT=4000
+MONGODB_URI=mongodb://localhost:27017/app_counter
+JWT_SECRET=sua_chave_secreta
+OPENAI_API_KEY=sk-...
+```
+
+### Importação de alimentos
+
+Para popular a base com a tabela TACO:
 
 ```bash
+cd server
 npm run import-taco
 ```
 
-_(Veja `DATA_IMPORT_GUIDE.md` para mais detalhes)_
+Detalhes em [DATA_IMPORT_GUIDE.md](/home/brunoamadorsolucoes/projetos_pessoais/agile-macros/DATA_IMPORT_GUIDE.md).
 
-### 2. Web App (Aplicação Principal)
+### Web App
 
 ```bash
 cd web
@@ -80,9 +65,13 @@ npm install
 npm run dev
 ```
 
-_Acesse em `http://localhost:5173`_
+Por padrão, a API é `http://localhost:4000`. Para sobrescrever:
 
-### 3. Landing Page (Site Institucional)
+```env
+VITE_API_URL=http://localhost:4000
+```
+
+### Landing Page
 
 ```bash
 cd landing_page
@@ -90,24 +79,15 @@ npm install
 npm run dev
 ```
 
-_Acesse em `http://localhost:3000`_
+### Rodar server + web pela raiz
 
----
-
-## 📂 Estrutura do Projeto
-
-```
-/
-├── landing_page/      # Site de marketing (Nuxt)
-├── web/              # Aplicação principal (Vue 3 PWA)
-├── server/           # API REST e Lógica de Negócios (Node)
-└── DEPLOYMENT_GUIDE.md # Guia completo de publicação (VPS + Vercel)
+```bash
+npm install
+npm run dev
 ```
 
-## 📄 Licença
+## Observações
 
-Este projeto é de uso pessoal e educacional.
-
----
-
-Desenvolvido com 💚 e ☕ por **Bruno Amador**.
+- O nome técnico legado em alguns `package.json` ainda é `app_counter`
+- A documentação operacional mais atual está em [PROJECT_HANDOVER.md](/home/brunoamadorsolucoes/projetos_pessoais/agile-macros/PROJECT_HANDOVER.md)
+- Os guias de deploy ainda precisam de uma rodada de alinhamento final com as variáveis reais do código
