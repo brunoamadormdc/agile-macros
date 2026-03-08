@@ -87,12 +87,16 @@ export const useDiaryStore = defineStore("diary", {
         await weekStore.loadWeekSummary(this.selectedDate);
         return true;
       } catch (err) {
-        if (err.response?.status === 402) {
-          authStore.showUpgradeModal = true;
-          return false; // Don't set this.error to avoid ugly banner
-        }
         if (err.response?.status === 429) {
           this.error = "Muitas requisições. Por favor, aguarde um momento.";
+          return false;
+        }
+        if (
+          err.response?.status === 403 &&
+          err.response?.data?.error?.code === "FEATURE_TEMPORARILY_DISABLED"
+        ) {
+          this.error = err.response.data.error.message;
+          authStore.showUpgradeModal = false;
           return false;
         }
         if (err.response?.data?.error?.code === "AI_DAILY_QUOTA_EXCEEDED") {

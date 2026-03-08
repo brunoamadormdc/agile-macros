@@ -1,10 +1,12 @@
 const dotenv = require("dotenv");
+const path = require("path");
 
-dotenv.config();
+dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 
 const env = {
   port: process.env.PORT ? Number(process.env.PORT) : 4000,
   mongoUri: process.env.MONGODB_URI,
+  freeLaunchMode: process.env.FREE_LAUNCH_MODE === "true",
   weeklyTargetKcal: process.env.WEEKLY_TARGET_KCAL
     ? Number(process.env.WEEKLY_TARGET_KCAL)
     : 14000,

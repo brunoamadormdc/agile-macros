@@ -2,8 +2,15 @@ const Stripe = require("stripe");
 const User = require("../models/User");
 const env = require("../config/env");
 
-// Initialize Stripe with the Secret Key
-const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
+const stripe = process.env.STRIPE_SECRET_KEY
+  ? Stripe(process.env.STRIPE_SECRET_KEY)
+  : null;
+
+function paymentUnavailable(res) {
+  return res.status(503).json({
+    error: "Payment provider is not configured",
+  });
+}
 
 /**
  * POST /api/payment/create-checkout-session
@@ -11,6 +18,10 @@ const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
  */
 exports.createCheckoutSession = async (req, res) => {
   try {
+    if (!stripe) {
+      return paymentUnavailable(res);
+    }
+
     const user = req.user; // From requireAuth middleware
 
     // 1. Get or Create Stripe Customer
@@ -58,6 +69,10 @@ exports.createCheckoutSession = async (req, res) => {
  */
 exports.createPortalSession = async (req, res) => {
   try {
+    if (!stripe) {
+      return paymentUnavailable(res);
+    }
+
     const user = req.user;
 
     if (!user.stripeCustomerId) {
@@ -84,6 +99,10 @@ exports.createPortalSession = async (req, res) => {
  * Note: req.body MUST be raw buffer here.
  */
 exports.handleWebhook = async (req, res) => {
+  if (env.freeLaunchMode || !stripe) {
+    return res.status(404).send("Webhook disabled");
+  }
+
   const sig = req.headers["stripe-signature"];
   let event;
 

@@ -146,7 +146,6 @@
 
 <script setup>
 import { computed } from 'vue';
-import { useAuthStore } from '../stores/auth';
 
 const props = defineProps({
   weekSummary: {
@@ -154,8 +153,6 @@ const props = defineProps({
     required: true,
   },
 });
-
-const authStore = useAuthStore();
 
 const weekRange = computed(() => {
   const start = props.weekSummary.days?.[0]?.date;
@@ -168,9 +165,7 @@ const weekRange = computed(() => {
   return `${fmt(start)} - ${fmt(end)}`;
 });
 
-const isRestricted = computed(() => {
-  return authStore.user?.plan === 'free' && authStore.credits <= 0;
-});
+const isRestricted = computed(() => false);
 
 const totalKcal = computed(() => props.weekSummary.weekTotal?.kcal ?? 0);
 const avgKcal = computed(() => totalKcal.value / 7);
@@ -237,7 +232,7 @@ const macroList = computed(() => {
 });
 
 function openUpgrade() {
-  authStore.showUpgradeModal = true;
+  return null;
 }
 
 function calcPercent(val, target) {

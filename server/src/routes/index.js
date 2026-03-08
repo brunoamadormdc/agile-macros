@@ -32,6 +32,18 @@ const paymentRoutes = require("./payment");
 const router = express.Router();
 const { generateWeeklyAnalysis } = require("../services/analysisService");
 
+const FEATURE_DISABLED_RESPONSE = {
+  error: {
+    message:
+      "Funcionalidade temporariamente indisponivel nesta versao de lancamento.",
+    code: "FEATURE_TEMPORARILY_DISABLED",
+  },
+};
+
+function sendFeatureDisabled(res) {
+  return res.status(403).json(FEATURE_DISABLED_RESPONSE);
+}
+
 const sundayDateSchema = z
   .string()
   .regex(/^\d{4}-\d{2}-\d{2}$/)
@@ -47,6 +59,10 @@ const sundayDateSchema = z
 
 router.post("/diary/weekly-analysis", requireAuth, async (req, res, next) => {
   try {
+    if (env.freeLaunchMode) {
+      return sendFeatureDisabled(res);
+    }
+
     const { date } = req.body; // Expecting the "Sunday" date
     if (!date) throw new Error("Date is required");
 
@@ -204,6 +220,16 @@ const PLAN_CREDITS = {
 };
 
 async function checkAndRenewCredits(user) {
+  if (env.freeLaunchMode) {
+    if (user.plan !== "free" || user.credits !== 0) {
+      user.plan = "free";
+      user.credits = 0;
+      await user.save();
+    }
+
+    return user;
+  }
+
   if (user.plan === "free") return user;
 
   const now = new Date();
@@ -250,7 +276,12 @@ router.post("/auth/register", async (req, res, next) => {
     }
 
     const passwordHash = await bcrypt.hash(payload.password, 10);
-    const user = await User.create({ email, passwordHash });
+    const user = await User.create({
+      email,
+      passwordHash,
+      plan: "free",
+      credits: 0,
+    });
     await seedPresetsIfEmpty(user._id.toString());
 
     const token = signToken(user);
@@ -522,6 +553,10 @@ router.get("/food-items/search", requireAuth, async (req, res, next) => {
 
 router.post("/subscription/simulate", requireAuth, async (req, res, next) => {
   try {
+    if (env.freeLaunchMode) {
+      return sendFeatureDisabled(res);
+    }
+
     const payload = validateOrThrow(planSchema, req.body, "Invalid payload");
 
     const credits = PLAN_CREDITS[payload.plan];
@@ -1032,6 +1067,13 @@ router.put("/diary/:date/items/:itemIndex", async (req, res, next) => {
 // Apply specific AI rate limiter and Quota check
 router.post(
   "/diary/:date/ai",
+  (req, res, next) => {
+    if (env.freeLaunchMode) {
+      return sendFeatureDisabled(res);
+    }
+
+    return next();
+  },
   aiRateLimiter,
   checkAIUsageLimit,
   async (req, res, next) => {

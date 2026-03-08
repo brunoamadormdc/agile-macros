@@ -77,19 +77,12 @@
 
         <!-- Add Section -->
         <div v-show="mainTab === 'add'" style="margin-top: 2rem;">
-          <AddFoodForm :loading="diaryStore.loading" @add="handleAdd" @add-ai="handleAddAi" />
+          <AddFoodForm :loading="diaryStore.loading" @add="handleAdd" />
         </div>
 
         <!-- Copy / Tools Section -->
         <div v-show="mainTab === 'copy'" class="copy-panel">
-          <div v-if="isFreePlan" class="empty-state">
-            <h3>🔒 Funcionalidade Premium</h3>
-            <p>Faça um upgrade para copiar refeições em massa e economizar tempo.</p>
-            <button class="btn" @click="authStore.showUpgradeModal = true" style="margin-top: 1rem;">
-              Ver Planos
-            </button>
-          </div>
-          <div v-else class="copy-body">
+          <div class="copy-body">
             <header class="copy-head">
               <div>
                 <p class="eyebrow">Automatizar semana</p>
@@ -159,7 +152,6 @@ import { useToast } from 'vue-toastification';
 import { useRouter } from 'vue-router';
 import { useDiaryStore } from '../stores/diary';
 import { useWeekStore } from '../stores/week';
-import { useAuthStore } from '../stores/auth';
 import DatePickerSimple from '../components/DatePickerSimple.vue';
 import DatePickerInput from '../components/DatePickerInput.vue';
 import DayTotalsCard from '../components/DayTotalsCard.vue';
@@ -178,10 +170,7 @@ const props = defineProps({
 const router = useRouter();
 const diaryStore = useDiaryStore();
 const weekStore = useWeekStore();
-const authStore = useAuthStore();
 const toast = useToast();
-
-const isFreePlan = computed(() => authStore.user?.plan === 'free');
 
 const currentDate = computed(() => props.date);
 const diaryItems = computed(() => diaryStore.diary?.items || []);
@@ -245,15 +234,6 @@ async function handleUpdate(index, payload) {
   const ok = await diaryStore.updateItem(index, payload);
   if (ok) {
     toast.success('Item atualizado!');
-  } else if (diaryStore.error) {
-    toast.error(diaryStore.error);
-  }
-}
-
-async function handleAddAi(payload) {
-  const ok = await diaryStore.addFromAi(payload);
-  if (ok) {
-    toast.success('Itens adicionados via IA!');
   } else if (diaryStore.error) {
     toast.error(diaryStore.error);
   }

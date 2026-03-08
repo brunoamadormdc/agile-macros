@@ -10,18 +10,7 @@
       <div class="header-actions" v-if="authStore.isAuthenticated">
         <div class="user-info">
           <span class="user-email">{{ authStore.user?.email }}</span>
-          <span class="plan-badge" :class="authStore.user?.plan">
-            {{ authStore.user?.plan === 'plus' ? '🏆 Plus' : 'Free' }}
-          </span>
-        </div>
-
-        <RouterLink v-if="authStore.user?.plan === 'free'" to="/plans" class="btn small upgrade" title="Ver Planos">
-          💎 Planos
-        </RouterLink>
-
-        <!-- Only show credits on Free/Basic plans -->
-        <div v-if="authStore.user?.plan !== 'plus'" class="credits-badge" title="Créditos de IA">
-          ⚡ {{ authStore.credits }}
+          <span class="plan-badge free">Free</span>
         </div>
 
         <!-- Interaction Streak -->
@@ -83,8 +72,6 @@
         <span class="label">Calculadora</span>
       </RouterLink>
     </nav>
-
-    <UpgradeModal />
   </div>
 </template>
 
@@ -92,7 +79,6 @@
 import { RouterLink, RouterView, useRouter } from 'vue-router';
 import { useAuthStore } from './stores/auth';
 import { useTheme } from './composables/useTheme';
-import UpgradeModal from './components/UpgradeModal.vue';
 import logoHor from '@/assets/logo_hor.png';
 import logoHorWhite from '@/assets/logo_hor_white.png';
 
@@ -129,24 +115,6 @@ function logout() {
   height: auto;
   text-decoration: none;
   /* Ensure link looks like button */
-}
-
-.btn.upgrade {
-  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-  color: white;
-  border: none;
-  box-shadow: 0 4px 6px rgba(245, 158, 11, 0.2);
-  margin-top: 0;
-  /* Override generic .btn margin */
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.btn.upgrade:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 8px rgba(245, 158, 11, 0.3);
-  filter: brightness(1.1);
 }
 
 /* Bottom Navigation Bar */

@@ -68,57 +68,6 @@
       </button>
     </div>
 
-    <!-- AI Tab -->
-    <div v-else-if="currentTab === 'ai'" class="tab-panel panel ai-panel">
-      <div class="ai-head">
-        <div>
-          <p class="eyebrow">Assistente</p>
-          <h3>Adicionar com IA</h3>
-          <p class="muted">Digite, fale ou envie uma foto das macros e nós calculamos para você.</p>
-        </div>
-        <button type="button" class="chip action" @click="toggleDictation" :class="{ active: isListening }">
-          <span v-if="!isListening">🎙️ Falar</span>
-          <span v-else>🛑 Gravando...</span>
-        </button>
-      </div>
-
-      <label class="field rel">
-        Descreva o que voce comeu
-        <textarea ref="aiInputRef" v-model="aiText" rows="4"
-          placeholder="Ex: cafe com leite, 2 paes franceses, 1 banana"></textarea>
-        <!-- Mic Button -->
-        <button type="button" class="btn-mic" :class="{ listening: isListening }" @click="toggleDictation"
-          title="Falar alimento">
-          <span v-if="!isListening">🎙️</span>
-          <span v-else>🛑</span>
-        </button>
-      </label>
-
-      <div class="file-block">
-        <div class="file-text">
-          <p class="label tight">Ou envie uma imagem</p>
-          <p class="muted">Foto do prato ou print das macros (opcional).</p>
-        </div>
-        <div class="file-upload-wrapper">
-          <input id="ai-image-upload" type="file" accept="image/*" class="file-input" @change="onImageChange" />
-          <label for="ai-image-upload" class="file-label btn ghost">
-            <span v-if="!aiFileName">📷 Escolher imagem</span>
-            <span v-else>🔄 Trocar imagem</span>
-          </label>
-          <span v-if="aiFileName" class="file-name">{{ aiFileName }}</span>
-        </div>
-      </div>
-
-      <div class="hint-row">
-        <span class="hint-badge">Dica</span>
-        <span class="muted">Fale em frases curtas: “200g frango grelhado, 1 colher arroz, salada verde”.</span>
-      </div>
-
-      <button class="btn primary-wide" type="button" :disabled="!canAddAi || loading" @click="submitAi">
-        {{ loading ? 'Enviando...' : 'Enviar para IA' }}
-      </button>
-    </div>
-
     <!-- Food Item Popup Modal -->
     <div v-if="showPopup && selectedItem" class="modal-overlay" @click.self="showPopup = false">
       <div class="modal">
@@ -163,21 +112,17 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
 import { searchFoods } from '../services/api';
-import { useToast } from 'vue-toastification';
-
-const toast = useToast();
 // Ensure searchFoods now calls /food-items/search
 
 const props = defineProps({
   loading: Boolean,
 });
 
-const emit = defineEmits(['add', 'add-ai']);
+const emit = defineEmits(['add']);
 
-const tabs = ['manual', 'ai'];
+const tabs = ['manual'];
 const labels = {
   manual: 'Manual',
-  ai: 'IA',
 };
 
 const meals = [
@@ -219,66 +164,6 @@ const showPopup = ref(false);
 const selectedItem = ref(null); // The raw item from database
 const popupQty = ref(100);
 
-// AI State
-const aiText = ref('');
-const aiImageDataUrl = ref('');
-const aiFileName = ref('');
-
-// Speech Recognition
-const isListening = ref(false);
-const aiInputRef = ref(null);
-let recognition = null;
-
-function toggleDictation() {
-  if (isListening.value) {
-    recognition?.stop();
-    isListening.value = false;
-    return;
-  }
-
-  // Blur textarea to ensure UI update state is clean usually fixes mobile keyboard issues or cursor conflicts
-  if (aiInputRef.value) {
-    aiInputRef.value.blur();
-  }
-
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRecognition) {
-    alert("Seu navegador não suporta reconhecimento de voz.");
-    return;
-  }
-
-  recognition = new SpeechRecognition();
-  recognition.lang = 'pt-BR';
-  recognition.continuous = false;
-  recognition.interimResults = false;
-
-  recognition.onstart = () => {
-    isListening.value = true;
-  };
-
-  recognition.onend = () => {
-    isListening.value = false;
-  };
-
-  recognition.onresult = (event) => {
-    const transcript = event.results[0][0].transcript;
-    if (transcript) {
-      if (aiText.value) {
-        aiText.value += ' ' + transcript;
-      } else {
-        aiText.value = transcript;
-      }
-    }
-  };
-
-  recognition.onError = (event) => {
-    console.error("Speech error", event);
-    isListening.value = false;
-  };
-
-  recognition.start();
-}
-
 const canAddManual = computed(() => {
   return (
     manual.value.label &&
@@ -287,7 +172,6 @@ const canAddManual = computed(() => {
     manual.value.macros.kcal >= 0
   );
 });
-const canAddAi = computed(() => Boolean(aiText.value.trim() || aiImageDataUrl.value));
 
 function onSearchInput() {
   showDropdown.value = true;
@@ -383,44 +267,6 @@ function submitManual() {
   };
 }
 
-function submitAi() {
-  emit('add-ai', {
-    text: aiText.value.trim() || undefined,
-    meal: selectedMeal.value,
-    imageDataUrl: aiImageDataUrl.value || undefined,
-  });
-}
-
-function onImageChange(event) {
-  const file = event.target.files?.[0];
-  if (!file) {
-    aiImageDataUrl.value = '';
-    aiFileName.value = '';
-    return;
-  }
-
-  // Validation: Max 5MB
-  const MAX_SIZE = 5 * 1024 * 1024;
-  if (file.size > MAX_SIZE) {
-    toast.error("A imagem deve ter no máximo 5MB.");
-    event.target.value = ''; // Reset input
-    return;
-  }
-
-  // Validation: Type
-  if (!file.type.startsWith('image/')) {
-    toast.error("Apenas arquivos de imagem são permitidos.");
-    event.target.value = '';
-    return;
-  }
-
-  const reader = new FileReader();
-  reader.onload = () => {
-    aiImageDataUrl.value = String(reader.result || '');
-    aiFileName.value = file.name;
-  };
-  reader.readAsDataURL(file);
-}
 </script>
 
 <style scoped>
