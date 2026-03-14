@@ -12,9 +12,9 @@
 
         <!-- Action Button for Analysis -->
         <div v-if="isTodaySunday" style="margin-bottom: 1rem;">
-          <button class="btn accent full-width" @click="runAnalysis">
+          <!-- <button class="btn accent full-width" @click="runAnalysis">
             {{ hasAnalysis ? '📜 Mostrar Análise Semanal' : '🧠 Analisar Semana com IA' }}
-          </button>
+          </button> -->
           <p v-if="!hasAnalysis" class="muted text-sm text-center" style="margin-top:0.5rem">
             Disponível aos domingos se todos os dias estiverem preenchidos (min 3 items).
           </p>
