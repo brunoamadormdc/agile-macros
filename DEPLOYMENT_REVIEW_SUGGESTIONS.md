@@ -152,3 +152,32 @@ o serviço de conteúdo estático, sua função mais eficiente nesse cenário.
 - validar renovação de certificados e o redirect HTTP → HTTPS;
 - testar login, PWA, rotas diretas da SPA, upload de imagem e `/health` após a
   alteração.
+
+---
+
+## Status das Sugestões (Oz - 2026-07-26)
+
+### ✅ Aplicado
+
+| # | Sugestão | Ação |
+|---|----------|------|
+| 1 | Servir Vue SPA via Nginx (sem PM2/serve) | `mw-web` removido do PM2. Nginx serve `web/dist` diretamente com `try_files $uri $uri/ /index.html` |
+| 2 | Versionar `ecosystem.config.js` | Já estava versionado. Atualizado para remover `mw-web` |
+| 3 | CORS restrito na API | `app.js` atualizado com `allowedOrigins` explícitos (www, app, api + localhost para dev) |
+| 4 | `proxy_http_version 1.1` no Nginx | Adicionado em todos os server blocks de proxy (landing e API) |
+| 5 | Cache headers para assets | `/assets/` com `expires 1y` + `immutable`. SW e manifest com `no-cache` |
+| 6 | Timeouts de proxy no Nginx | `proxy_connect_timeout 10s`, `proxy_send_timeout 30s`, `proxy_read_timeout 30s` |
+
+### ⏳ Não aplicado agora (pós-lançamento)
+
+| # | Sugestão | Motivo |
+|---|----------|--------|
+| 7 | PM2 como usuário dedicado (não root) | VPS single-tenant. Risco baixo. Migrar após lançamento estável |
+| 8 | HTTPS completo | Script `setup-ssl.sh` pronto. Aguardando configuração de DNS |
+| 9 | `npm ci` em vez de `npm install` | Requer `package-lock.json` sincronizado na branch. Aplicar no próximo deploy |
+
+### ❌ Não aplicado (discordância)
+
+| # | Sugestão | Motivo |
+|---|----------|--------|
+| 10 | MongoDB bind apenas em localhost | Bind em `161.97.82.106` necessário para conexões remotas de desenvolvimento. Segurança garantida pelo UFW com whitelist de IPs |

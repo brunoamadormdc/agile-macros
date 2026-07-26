@@ -16,8 +16,24 @@ app.set("trust proxy", 1); // Indispensável para pegar o IP real através do Ng
 // Security Headers
 app.use(helmet());
 
-// CORS - Restricted Origin could be configured here later
-app.use(cors());
+// CORS - Restricted to known origins
+const allowedOrigins = [
+  'https://www.macroweek.com.br',
+  'https://app.macroweek.com.br',
+  'https://api.macroweek.com.br',
+  'http://localhost:5173',
+  'http://localhost:3000',
+];
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+}));
 
 // Stripe Webhook - MUST be before express.json() to get raw body
 app.post(

@@ -39,3 +39,4 @@ server/logs/
 # Optional: Ignore data if using local db folder inside project (not recommended but happens)
 data/
 db/
+logs/
