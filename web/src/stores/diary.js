@@ -6,6 +6,7 @@ import {
   getDiary,
   updateDiaryItem,
 } from "../services/api";
+import { useAuthStore } from "./auth";
 import { useWeekStore } from "./week";
 
 export const useDiaryStore = defineStore("diary", {
