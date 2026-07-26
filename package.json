@@ -6,9 +6,12 @@
     "web"
   ],
   "scripts": {
-    "dev": "concurrently \"npm --prefix server run dev\" \"npm --prefix web run dev\"",
+    "dev": "npm run dev:all",
+    "dev:all": "concurrently --kill-others-on-fail --names api,web,landing --prefix-colors blue,green,magenta \"npm --prefix server run dev\" \"npm --prefix web run dev\" \"npm --prefix landing_page run dev\"",
     "dev:server": "npm --prefix server run dev",
     "dev:web": "npm --prefix web run dev",
+    "dev:landing": "npm --prefix landing_page run dev",
+    "stop:local": "bash scripts/stop-local.sh",
     "start": "npm --prefix server run start"
   },
   "devDependencies": {

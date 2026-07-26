@@ -1,12 +1,19 @@
 import { fileURLToPath, URL } from "node:url";
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 import vue from "@vitejs/plugin-vue";
 import { VitePWA } from "vite-plugin-pwa";
 
-export default defineConfig({
-  plugins: [
-    vue(),
-    VitePWA({
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), "");
+
+  if (mode === "production" && !env.VITE_API_URL) {
+    throw new Error("VITE_API_URL must be defined for a production build.");
+  }
+
+  return {
+    plugins: [
+      vue(),
+      VitePWA({
       registerType: "autoUpdate",
       devOptions: {
         enabled: true,
@@ -18,10 +25,10 @@ export default defineConfig({
         "pwa-512x512.png",
       ],
       manifest: {
-        name: "Agile Macros - Dieta com IA",
-        short_name: "Agile Macros",
+        name: "MacroWeek - Saldo Semanal",
+        short_name: "MacroWeek",
         description:
-          "Controle sua dieta com Inteligência Artificial e saldo semanal.",
+          "Controle sua alimentação com saldo semanal.",
         theme_color: "#10b981",
         background_color: "#ffffff",
         display: "standalone",
@@ -50,15 +57,16 @@ export default defineConfig({
       workbox: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,vue}"],
       },
-    }),
-  ],
-  resolve: {
-    alias: {
-      "@": fileURLToPath(new URL("./src", import.meta.url)),
+      }),
+    ],
+    resolve: {
+      alias: {
+        "@": fileURLToPath(new URL("./src", import.meta.url)),
+      },
     },
-  },
-  server: {
-    port: 5173,
-    host: true,
-  },
+    server: {
+      port: 5173,
+      host: true,
+    },
+  };
 });

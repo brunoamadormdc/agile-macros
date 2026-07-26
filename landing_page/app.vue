@@ -8,9 +8,9 @@
                 </div>
                 <nav class="nav">
                     <a href="#concept">O Conceito</a>
-                    <a href="#pricing">Planos</a>
+                    <a href="#concept">Como funciona</a>
                     <a href="#faq">Dúvidas</a>
-                    <a href="http://localhost:5173/" class="btn small primary">Acessar App</a>
+                    <a :href="appUrl" class="btn small primary">Acessar App</a>
                 </nav>
             </div>
         </header>
@@ -29,7 +29,7 @@
                 </p>
 
                 <div class="hero-ctas">
-                    <a href="http://localhost:5173/plans" class="btn primary big pulse">Começar Agora (Grátis)</a>
+                    <a :href="`${appUrl}/register`" class="btn primary big pulse">Começar Agora (Grátis)</a>
                     <p class="microcopy">⚡ Sem cartão de crédito. Leva 30 segundos.</p>
                 </div>
 
@@ -160,7 +160,7 @@
                     <div class="step-item">
                         <div class="step-num">2</div>
                         <h4>Registre em 5s</h4>
-                        <p>Use IA de Texto, Voz ou Fotos. Ou a função "Copiar Dia Anterior" pra ganhar tempo.</p>
+                        <p>Registre suas refeições manualmente ou copie um dia anterior para ganhar tempo.</p>
                     </div>
                     <div class="step-item">
                         <div class="step-num">3</div>
@@ -169,7 +169,7 @@
                     </div>
                 </div>
                 <div class="center-cta">
-                    <a href="http://localhost:5173/register" class="btn primary big">Começar Meu Teste</a>
+                    <a :href="`${appUrl}/register`" class="btn primary big">Começar agora</a>
                 </div>
             </div>
         </section>
@@ -182,7 +182,7 @@
                     <ul class="check-grid">
                         <li>✅ Cálculo de TMB e GET preciso</li>
                         <li>✅ Definição de Macros (Prot/Carb/Gord)</li>
-                        <li>✅ 10 Créditos de IA Grátis</li>
+                        <li>✅ Registro manual ilimitado</li>
                         <li>✅ Acesso à base TACO Brasileira</li>
                         <li>✅ Zero necessidade de Cartão de Crédito</li>
                     </ul>
@@ -200,8 +200,8 @@
                 <div class="faq-list">
                     <details class="faq-item">
                         <summary>Preciso pesar minha comida?</summary>
-                        <p>Para ter resultado máximo, sim. Mas você pode usar medidas caseiras (colheres/xícaras) que a
-                            IA entende perfeitamente.</p>
+                        <p>Para ter resultado máximo, sim. Você também pode registrar medidas caseiras, como
+                            colheres e xícaras.</p>
                     </details>
                     <details class="faq-item">
                         <summary>E se eu comer besteira (dia do lixo)?</summary>
@@ -212,11 +212,6 @@
                         <summary>Funciona para Cutting e Bulking?</summary>
                         <p>Sim. Você define o objetivo e o app ajusta a matemática do saldo semanal para garantir que
                             você esteja em déficit ou superávit.</p>
-                    </details>
-                    <details class="faq-item">
-                        <summary>A IA erra?</summary>
-                        <p>A IA estima com base em bancos de dados. É uma estimativa excelente, mas você sempre pode
-                            editar a quantidade ou o alimento antes de salvar.</p>
                     </details>
                     <details class="faq-item">
                         <summary>Tem alimentos brasileiros?</summary>
@@ -231,57 +226,13 @@
             </div>
         </section>
 
-        <!-- Pricing Section -->
-        <section id="pricing" class="pricing">
-            <div class="container header-content">
-                <!-- reusing flex container for centering if needed, looking at css below -->
-                <!-- Pricing Header -->
-                <div class="pricing-header-v2">
-                    <h2>Investimento no seu Shape</h2>
-                    <p>Mais barato que um whey, muito mais resultado.</p>
-                </div>
-            </div>
-
-            <div class="container">
-                <div class="pricing-grid-v2">
-                    <!-- Free -->
-                    <div class="p-card">
-                        <h3>Grátis</h3>
-                        <div class="price">R$ 0</div>
-                        <p class="sub-price">Para sempre</p>
-                        <ul class="benefits-mini">
-                            <li>✅ Registro Manual Ilimitado</li>
-                            <li>✅ 20 Créditos de IA (Teste)</li>
-                            <li>✅ Saldo Semanal Básico</li>
-                        </ul>
-                        <a href="http://localhost:5173/plans" class="btn secondary full">Começar Grátis</a>
-                    </div>
-
-                    <!-- Plus -->
-                    <div class="p-card featured">
-                        <div class="pill-rec">Recomendado</div>
-                        <h3>Plus</h3>
-                        <div class="price">R$ 49,90 <small>/mês</small></div>
-                        <p class="sub-price">Cancele quando quiser</p>
-                        <ul class="benefits-mini">
-                            <li>🔥 <strong>IA ILIMITADA</strong> (Voz/Foto)</li>
-                            <li>🔥 Smart Copy (Ganhe Tempo)</li>
-                            <li>🔥 Histórico Completo</li>
-                            <li>🔥 Estratégias Avançadas</li>
-                        </ul>
-                        <a href="http://localhost:5173/plans" class="btn primary full big">Garantir Plus</a>
-                    </div>
-                </div>
-            </div>
-        </section>
-
         <!-- Footer -->
         <footer class="footer-cta">
             <div class="container text-center">
                 <h2>Pare de começar do zero toda segunda-feira.</h2>
                 <p>Assuma o controle do seu saldo semanal hoje.</p>
                 <br>
-                <a href="http://localhost:5173/plans" class="btn primary huge pulse">Criar Minha Conta</a>
+                <a :href="`${appUrl}/register`" class="btn primary huge pulse">Criar Minha Conta</a>
                 <p class="footer-copy">&copy; 2026 MacroWeek. Feito para quem treina.</p>
             </div>
         </footer>
@@ -289,12 +240,14 @@
 </template>
 
 <script setup>
-import { useHead } from '#imports'
+import { useHead, useRuntimeConfig } from '#imports'
+
+const { public: { appUrl } } = useRuntimeConfig()
 
 useHead({
     title: 'MacroWeek - Saldo Semanal Inteligente',
     meta: [
-        { name: 'description', content: 'Pare de desistir da dieta. O MacroWeek ajusta sua meta automaticamente quando você exagera. Controle de macros com IA e estratégia real.' },
+        { name: 'description', content: 'Pare de desistir da dieta. O MacroWeek ajusta sua meta automaticamente quando você exagera.' },
         { name: 'theme-color', content: '#0f172a' }
     ],
     htmlAttrs: {

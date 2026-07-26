@@ -12,12 +12,26 @@ function paymentUnavailable(res) {
   });
 }
 
+function paymentsDisabled(res) {
+  return res.status(403).json({
+    error: {
+      message:
+        "Funcionalidade temporariamente indisponivel nesta versao de lancamento.",
+      code: "FEATURE_TEMPORARILY_DISABLED",
+    },
+  });
+}
+
 /**
  * POST /api/payment/create-checkout-session
  * Creates a checkout session for the user to subscribe to "Plus".
  */
 exports.createCheckoutSession = async (req, res) => {
   try {
+    if (!env.paymentsEnabled || env.freeLaunchMode) {
+      return paymentsDisabled(res);
+    }
+
     if (!stripe) {
       return paymentUnavailable(res);
     }
@@ -49,8 +63,8 @@ exports.createCheckoutSession = async (req, res) => {
         },
       ],
       mode: "subscription",
-      success_url: `${process.env.CLIENT_URL || "http://localhost:5173"}/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.CLIENT_URL || "http://localhost:5173"}/cancel`,
+      success_url: `${env.clientUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${env.clientUrl}/cancel`,
       metadata: {
         userId: user._id.toString(),
       },
@@ -69,6 +83,10 @@ exports.createCheckoutSession = async (req, res) => {
  */
 exports.createPortalSession = async (req, res) => {
   try {
+    if (!env.paymentsEnabled || env.freeLaunchMode) {
+      return paymentsDisabled(res);
+    }
+
     if (!stripe) {
       return paymentUnavailable(res);
     }
@@ -83,7 +101,7 @@ exports.createPortalSession = async (req, res) => {
 
     const session = await stripe.billingPortal.sessions.create({
       customer: user.stripeCustomerId,
-      return_url: `${process.env.CLIENT_URL || "http://localhost:5173"}/plans`,
+      return_url: `${env.clientUrl}/plans`,
     });
 
     res.json({ url: session.url });
@@ -99,7 +117,7 @@ exports.createPortalSession = async (req, res) => {
  * Note: req.body MUST be raw buffer here.
  */
 exports.handleWebhook = async (req, res) => {
-  if (env.freeLaunchMode || !stripe) {
+  if (!env.paymentsEnabled || env.freeLaunchMode || !stripe) {
     return res.status(404).send("Webhook disabled");
   }
 

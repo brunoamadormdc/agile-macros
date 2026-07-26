@@ -7,12 +7,12 @@ const env = {
   port: process.env.PORT ? Number(process.env.PORT) : 4000,
   mongoUri: process.env.MONGODB_URI,
   freeLaunchMode: process.env.FREE_LAUNCH_MODE === "true",
+  paymentsEnabled: process.env.PAYMENTS_ENABLED === "true",
   weeklyTargetKcal: process.env.WEEKLY_TARGET_KCAL
     ? Number(process.env.WEEKLY_TARGET_KCAL)
     : 14000,
-  openAiKey: process.env.OPENAI_API_KEY,
-  openAiModel: process.env.OPENAI_MODEL,
   jwtSecret: process.env.JWT_SECRET,
+  clientUrl: process.env.CLIENT_URL || "http://localhost:5173",
   // Email Config
   smtpHost: process.env.SMTP_HOST,
   smtpPort: process.env.SMTP_PORT,

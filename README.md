@@ -1,6 +1,6 @@
 # MacroWeek
 
-App de diário alimentar com foco em saldo semanal, metas dinâmicas e recursos assistidos por IA.
+App de diário alimentar com foco em saldo semanal e metas dinâmicas.
 
 ## Estrutura
 
@@ -17,7 +17,7 @@ App de diário alimentar com foco em saldo semanal, metas dinâmicas e recursos 
 - Backend: Node.js, Express, Mongoose, JWT, Zod
 - Web app: Vue 3, Vite, Pinia, Vue Router
 - Landing page: Nuxt
-- Integrações: OpenAI, Stripe, Nodemailer
+- Integrações ativas: Nodemailer (opcional)
 
 ## Rodando Localmente
 
@@ -43,7 +43,8 @@ Variáveis mínimas:
 PORT=4000
 MONGODB_URI=mongodb://localhost:27017/app_counter
 JWT_SECRET=sua_chave_secreta
-OPENAI_API_KEY=sk-...
+FREE_LAUNCH_MODE=true
+PAYMENTS_ENABLED=false
 ```
 
 ### Importação de alimentos
@@ -79,11 +80,19 @@ npm install
 npm run dev
 ```
 
-### Rodar server + web pela raiz
+### Rodar os três projetos pela raiz
 
 ```bash
 npm install
+npm --prefix landing_page install
 npm run dev
+```
+
+Isso inicia API (`4000`), SPA (`5173`) e landing (`3000`). Para encerrar
+somente os processos que ocupam essas portas:
+
+```bash
+npm run stop:local
 ```
 
 ## Observações

@@ -8,11 +8,6 @@ async function start() {
     console.error("FATAL: MONGODB_URI is not defined.");
     process.exit(1);
   }
-  if (!env.freeLaunchMode && !env.openAiKey) {
-    console.error("FATAL: OPENAI_API_KEY is not defined.");
-    process.exit(1);
-  }
-
   try {
     await connectDb();
     app.listen(env.port, () => {

@@ -19,18 +19,12 @@ export const useAuthStore = defineStore("auth", {
     user: null,
     loading: false,
     error: null,
-    showUpgradeModal: false,
   }),
   getters: {
     isAuthenticated: (state) => Boolean(state.token),
     credits: (state) => state.user?.credits ?? 0,
   },
   actions: {
-    decrementCredits() {
-      if (this.user && this.user.credits > 0) {
-        this.user.credits--;
-      }
-    },
     async login(credentials) {
       this.loading = true;
       this.error = null;
@@ -80,33 +74,6 @@ export const useAuthStore = defineStore("auth", {
       this.token = null;
       this.user = null;
       setStoredToken(null);
-    },
-    async subscribeToPlus() {
-      try {
-        // Assume API is configured with baseURL
-        const { data } = await api.post("/api/payment/create-checkout-session");
-        if (data.url) {
-          window.location.href = data.url;
-          return true;
-        }
-      } catch (err) {
-        console.error("Subscription error", err);
-        this.error = "Erro ao iniciar checkout.";
-        return false;
-      }
-    },
-    async manageSubscription() {
-      try {
-        const { data } = await api.post("/api/payment/create-portal-session");
-        if (data.url) {
-          window.location.href = data.url;
-          return true;
-        }
-      } catch (err) {
-        console.error("Portal error", err);
-        this.error = "Erro ao acessar portal de assinatura.";
-        return false;
-      }
     },
   },
 });

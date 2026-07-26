@@ -49,10 +49,6 @@ export function getPresets() {
   return api.get("/api/presets").then((res) => res.data);
 }
 
-export function addDiaryFromAi(date, payload) {
-  return api.post(`/api/diary/${date}/ai`, payload).then((res) => res.data);
-}
-
 export function copyDiaryRange(date, payload) {
   return api
     .post(`/api/diary/${date}/copy-range`, payload)
@@ -90,11 +86,6 @@ export function resetPassword(token, password) {
   return api
     .post("/api/auth/reset-password", { token, password })
     .then((res) => res.data);
-}
-
-// Analysis
-export function requestWeeklyAnalysis(dateStr) {
-  return api.post('/api/diary/weekly-analysis', { date: dateStr }).then(res => res.data);
 }
 
 export default api;

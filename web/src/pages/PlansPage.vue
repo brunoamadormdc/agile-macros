@@ -2,7 +2,7 @@
     <section class="page plans-page">
         <div class="header-center">
             <h1>Versao Free em Lancamento</h1>
-            <p class="subtitle">Os recursos pagos e a inteligencia artificial serao liberados depois desta primeira fase.</p>
+            <p class="subtitle">Recursos pagos serão avaliados após esta primeira fase.</p>
         </div>
 
         <div class="plans-container">

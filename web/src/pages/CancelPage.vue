@@ -2,14 +2,14 @@
   <div class="page centered-page">
     <div class="card result-card">
       <div class="icon">⚠️</div>
-      <h1>Assinatura Cancelada</h1>
-      <p>O processo de assinatura não foi concluído.</p>
+      <h1>Recursos pagos indisponíveis</h1>
+      <p>Esta versão inicial funciona inteiramente no plano gratuito.</p>
       <p class="description">
-        Nenhuma cobrança foi realizada. Se você teve algum problema, tente novamente ou entre em contato.
+        Continue registrando suas refeições e acompanhando suas metas semanais.
       </p>
       <div class="actions">
-        <button class="btn btn-primary" @click="tryAgain">
-          Tentar Novamente
+        <button class="btn btn-primary" @click="goToDiary">
+          Ir para o diário
         </button>
         <button class="btn ghost" @click="goHome">
           Voltar ao Início
@@ -24,8 +24,8 @@ import { useRouter } from 'vue-router';
 
 const router = useRouter();
 
-function tryAgain() {
-  router.push('/plans');
+function goToDiary() {
+  router.push('/today');
 }
 
 function goHome() {

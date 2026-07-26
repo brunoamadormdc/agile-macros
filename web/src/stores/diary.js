@@ -1,6 +1,5 @@
 import { defineStore } from "pinia";
 import {
-  addDiaryFromAi,
   addDiaryItem,
   copyDiaryRange,
   deleteDiaryItem,
@@ -8,7 +7,6 @@ import {
   updateDiaryItem,
 } from "../services/api";
 import { useWeekStore } from "./week";
-import { useAuthStore } from "./auth";
 
 export const useDiaryStore = defineStore("diary", {
   state: () => ({
@@ -73,41 +71,6 @@ export const useDiaryStore = defineStore("diary", {
         this.error =
           err?.response?.data?.error?.message || "Erro ao atualizar item";
         return false;
-      }
-    },
-    async addFromAi(payload) {
-      const weekStore = useWeekStore();
-      const authStore = useAuthStore(); // Lazy import-like usage
-      this.error = null;
-      this.loading = true; // Ensure loading state is set manually if not handled by interceptors/components
-      try {
-        await addDiaryFromAi(this.selectedDate, payload);
-        authStore.decrementCredits();
-        await this.loadDiary(this.selectedDate);
-        await weekStore.loadWeekSummary(this.selectedDate);
-        return true;
-      } catch (err) {
-        if (err.response?.status === 429) {
-          this.error = "Muitas requisições. Por favor, aguarde um momento.";
-          return false;
-        }
-        if (
-          err.response?.status === 403 &&
-          err.response?.data?.error?.code === "FEATURE_TEMPORARILY_DISABLED"
-        ) {
-          this.error = err.response.data.error.message;
-          authStore.showUpgradeModal = false;
-          return false;
-        }
-        if (err.response?.data?.error?.code === "AI_DAILY_QUOTA_EXCEEDED") {
-          this.error = err.response.data.error.message;
-          return false;
-        }
-        this.error =
-          err?.response?.data?.error?.message || "Erro ao processar IA";
-        return false;
-      } finally {
-        this.loading = false;
       }
     },
     async copyToRange(payload) {

@@ -2,10 +2,10 @@
   <div class="page centered-page">
     <div class="card result-card success">
       <div class="icon">🎉</div>
-      <h1>Pagamento Confirmado!</h1>
-      <p>Bem-vindo ao <strong>MacroWeek Plus</strong>.</p>
+      <h1>Versão gratuita em lançamento</h1>
+      <p>O MacroWeek está disponível com os recursos da primeira fase.</p>
       <p class="description">
-        Sua assinatura está ativa e você já tem acesso ilimitado à inteligência artificial.
+        Registre suas refeições, acompanhe seu saldo semanal e ajuste suas metas.
       </p>
       <button class="btn btn-primary" @click="goToDashboard">
         Ir para o Dashboard
@@ -16,16 +16,8 @@
 
 <script setup>
 import { useRouter } from 'vue-router';
-import { useAuthStore } from '../stores/auth';
-import { onMounted } from 'vue';
 
 const router = useRouter();
-const authStore = useAuthStore();
-
-onMounted(async () => {
-    // Refresh user profile to get new plan status
-    await authStore.fetchMe();
-});
 
 function goToDashboard() {
   router.push('/');

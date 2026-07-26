@@ -5,8 +5,8 @@ const env = require("../config/env");
 
 const router = express.Router();
 
-function blockDuringFreeLaunch(req, res, next) {
-  if (!env.freeLaunchMode) {
+function blockPayments(req, res, next) {
+  if (env.paymentsEnabled && !env.freeLaunchMode) {
     return next();
   }
 
@@ -22,13 +22,13 @@ function blockDuringFreeLaunch(req, res, next) {
 router.post(
   "/create-checkout-session",
   requireAuth,
-  blockDuringFreeLaunch,
+  blockPayments,
   paymentController.createCheckoutSession,
 );
 router.post(
   "/create-portal-session",
   requireAuth,
-  blockDuringFreeLaunch,
+  blockPayments,
   paymentController.createPortalSession,
 );
 
