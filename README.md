@@ -101,29 +101,32 @@ npm run stop:local
 - A documentação operacional mais atual está em [PROJECT_HANDOVER.md](/home/brunoamadorsolucoes/projetos_pessoais/agile-macros/PROJECT_HANDOVER.md)
 - Os guias de deploy ainda precisam de uma rodada de alinhamento final com as variáveis reais do código
 
+
 ## Produção
 
 ### Arquitetura
 
-Em produção, a aplicação é servida por **PM2** (gerenciador de processos) com **Nginx** como proxy reverso. Cada componente roda como um processo independente:
+Em produção, a aplicação é servida por **PM2** (gerenciador de processos) com **Nginx** como proxy reverso. A Web App (Vue SPA) é servida estaticamente pelo Nginx, sem necessidade de processo Node.
 
 ```text
                          ┌─────────────────────────────────┐
                          │           Nginx (port 80)        │
                          ├─────────────────────────────────┤
  www.macroweek.com.br  ──┤  proxy_pass → localhost:3000    │──→  mw-landing (Nuxt SSR)
- app.macroweek.com.br  ──┤  proxy_pass → localhost:5173    │──→  mw-web (Vue SPA)
+ app.macroweek.com.br  ──┤  root web/dist + try_files      │──→  Arquivos estáticos
  api.macroweek.com.br  ──┤  proxy_pass → localhost:4000    │──→  mw-api (Express)
                          └─────────────────────────────────┘
 ```
 
-### Componentes PM2
+### Componentes
 
-| Processo   | Stack            | Porta | Descrição                     |
-|------------|------------------|-------|-------------------------------|
-| `mw-api`   | Express + Node   | 4000  | API REST com MongoDB          |
-| `mw-web`   | Vue 3 + Vite     | 5173  | SPA servida via `serve -s`    |
-| `mw-landing` | Nuxt (SSR)     | 3000  | Landing page renderizada no servidor |
+| Processo     | Stack          | Porta | Servido por        |
+|--------------|----------------|-------|--------------------|
+| `mw-api`     | Express + Node | 4000  | PM2                |
+| `mw-landing` | Nuxt (SSR)     | 3000  | PM2                |
+| *(Web App)*  | Vue 3 + Vite   | —     | Nginx (estático)   |
+
+A Web App é compilada para `web/dist/` e servida diretamente pelo Nginx com `try_files $uri $uri/ /index.html`, preservando as rotas do Vue Router. Assets com hash recebem cache de 1 ano (`immutable`); `index.html`, service worker e manifest recebem `no-cache`.
 
 Configuração do PM2: `ecosystem.config.js` na raiz do projeto.
 
@@ -155,10 +158,12 @@ cd landing_page
 NUXT_PUBLIC_APP_URL=https://app.macroweek.com.br npx nuxi build
 cd ..
 
-# 4. Iniciar via PM2
+# 4. Iniciar via PM2 (API + Landing)
 pm2 start ecosystem.config.js
 pm2 save
 ```
+
+A Web App não precisa de processo PM2 — o Nginx serve `web/dist/` diretamente.
 
 ### Nginx — Configuração
 
@@ -173,10 +178,34 @@ O Nginx atua como proxy reverso com as seguintes configurações de segurança:
 - `client_body_timeout 12s` / `client_header_timeout 12s` — timeouts contra slowloris
 - `ssl_protocols TLSv1.2 TLSv1.3` — apenas TLS moderno
 
-**`/etc/nginx/sites-available/macroweek.conf` (server blocks):**
+**`/etc/nginx/sites-available/macroweek.conf`:**
 
-```
-# Landing Page (Nuxt)
+```nginx
+# Web App (Vue SPA) — servido estaticamente
+server {
+    listen 80;
+    server_name app.macroweek.com.br;
+    limit_req zone=general burst=20 nodelay;
+    limit_conn addr 10;
+
+    root /home/projetos/agile-macros/web/dist;
+    index index.html;
+
+    location /assets/ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+
+    location ~* (sw\.js|workbox-.*\.js|manifest\.webmanifest)$ {
+        add_header Cache-Control "no-cache";
+    }
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}
+
+# Landing Page (Nuxt SSR via proxy)
 server {
     listen 80;
     server_name www.macroweek.com.br;
@@ -184,37 +213,35 @@ server {
     limit_conn addr 10;
 
     location / {
-        proxy_pass http://localhost:3000;
+        proxy_pass http://127.0.0.1:3000;
+        proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_connect_timeout 10s;
+        proxy_send_timeout 30s;
+        proxy_read_timeout 30s;
     }
 }
 
-# Web App (Vue)
-server {
-    listen 80;
-    server_name app.macroweek.com.br;
-    limit_req zone=general burst=20 nodelay;
-    limit_conn addr 10;
-
-    location / {
-        proxy_pass http://localhost:5173;
-        ...
-    }
-}
-
-# API (Express)
+# API (Express via proxy)
 server {
     listen 80;
     server_name api.macroweek.com.br;
-    limit_req zone=api burst=10 nodelay;    # mais restritivo
+    limit_req zone=api burst=10 nodelay;
     limit_conn addr 5;
 
     location / {
-        proxy_pass http://localhost:4000;
-        ...
+        proxy_pass http://127.0.0.1:4000;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_connect_timeout 10s;
+        proxy_send_timeout 30s;
+        proxy_read_timeout 30s;
     }
 }
 ```
@@ -232,6 +259,16 @@ O script:
 2. Gera certificados via Certbot
 3. Atualiza o Nginx para HTTPS com redirect HTTP → HTTPS
 4. A renovação automática está ativa via `certbot.timer` (systemd)
+
+### CORS
+
+A API aceita requisições apenas das seguintes origens:
+
+- `https://www.macroweek.com.br`
+- `https://app.macroweek.com.br`
+- `https://api.macroweek.com.br`
+- `http://localhost:5173` (desenvolvimento)
+- `http://localhost:3000` (desenvolvimento)
 
 ### Variáveis de Ambiente (Produção)
 
@@ -285,7 +322,7 @@ NUXT_PUBLIC_APP_URL=https://app.macroweek.com.br
 
 ### Persistência no Boot
 
-Ambos serviços estão configurados para iniciar automaticamente:
+Todos os serviços estão configurados para iniciar automaticamente:
 
 - **PM2:** `pm2-root.service` (systemd, habilitado)
 - **Nginx:** `nginx.service` (systemd, habilitado)
