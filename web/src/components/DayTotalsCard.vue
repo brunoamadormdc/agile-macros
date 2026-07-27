@@ -4,14 +4,22 @@
       <h2>Totais do dia</h2>
     </div>
 
-    <div class="content">
+    <div class="content" aria-live="polite">
       <div class="status-row">
-        <span class="pill" :class="remaining >= 0 ? 'pill-success' : 'pill-danger'">
-          {{ remaining >= 0 ? 'Dentro/abaixo da meta' : 'Acima da meta' }}
+        <span class="pill" :class="budgetExhausted ? 'pill-danger' : remaining >= 0 ? 'pill-success' : 'pill-danger'">
+          {{ budgetExhausted ? budgetLabel : remaining >= 0 ? 'Dentro/abaixo da meta' : 'Acima da meta' }}
         </span>
         <span class="hint">
-          {{ remaining >= 0 ? `Você pode consumir ~${Math.round(remaining)} kcal para bater a meta.` : `Reduza ~${Math.abs(Math.round(remaining))} kcal para voltar à meta.` }}
+          {{ budgetExhausted
+            ? budgetHint
+            : remaining >= 0
+              ? `Ainda disponíveis hoje: ~${Math.round(remaining)} kcal.`
+              : `Você excedeu a meta de hoje em ~${Math.abs(Math.round(remaining))} kcal.` }}
         </span>
+      </div>
+
+      <div v-if="budgetExhausted" class="budget-warning">
+        Não há uma meta diária a distribuir hoje. Não é necessário compensar com restrição extrema; continue registrando para acompanhar o saldo real da semana.
       </div>
 
       <div class="main-stat">
@@ -19,7 +27,7 @@
         <span class="unit-label">kcal</span>
       </div>
 
-      <div class="progress-area">
+      <div v-if="!budgetExhausted" class="progress-area">
         <div class="progress-bar">
           <div class="progress-fill" :class="{ 'bg-danger pulse': totals.kcal > target }"
             :style="{ width: calcPercent(totals.kcal, target) }"></div>
@@ -32,7 +40,7 @@
         </div>
         <div class="remaining-text">
           <span>
-            Meta: {{ Math.round(target) }}
+            Meta de hoje: {{ Math.round(target) }}
             <small v-if="baseTarget && baseTarget !== target" class="text-muted">
               (Base: {{ Math.round(baseTarget) }})
             </small>
@@ -43,6 +51,17 @@
         </div>
       </div>
 
+      <p v-if="compensation && !budgetExhausted" class="compensation-note">
+        <template v-if="Math.abs(compensation.dailyAdjustmentKcal) < 0.5">
+          Meta base mantida para hoje.
+        </template>
+        <template v-else>
+          Ajuste pelo saldo semanal:
+          <strong>{{ formatSigned(compensation.dailyAdjustmentKcal) }} kcal</strong>
+          em relação à base, considerando {{ compensation.daysToDistribute }} dias até domingo.
+        </template>
+      </p>
+
       <div class="macros-grid">
         <div v-for="macro in macroList" :key="macro.key" class="macro-cell">
           <div class="macro-top">
@@ -51,7 +70,7 @@
           </div>
           <div class="value-wrapper">
             <span class="macro-val">{{ macro.value.toFixed(1) }}g</span>
-            <span v-if="macro.target" class="macro-target">de {{ Math.round(macro.target) }}g</span>
+            <span v-if="macro.targetLabel" class="macro-target">{{ macro.targetLabel }}</span>
           </div>
           <div class="progress-bar mini">
             <div class="progress-fill" :class="macro.barClass" :style="{ width: macro.percent }"></div>
@@ -89,10 +108,33 @@ const props = defineProps({
   baseMacros: {
     type: Object,
     default: () => ({})
+  },
+  compensation: {
+    type: Object,
+    default: null,
   }
 });
 
-const remaining = computed(() => props.target - (props.totals.kcal || 0));
+const remaining = computed(() =>
+  props.compensation?.availableTodayKcal ?? (props.target - (props.totals.kcal || 0))
+);
+const budgetState = computed(() => {
+  if (props.compensation?.budgetState) return props.compensation.budgetState;
+  if (props.compensation?.status === 'weekly_budget_exhausted') {
+    return props.compensation.remainingWeekBudgetKcal < 0 ? 'exceeded' : 'depleted';
+  }
+  return props.target < 0 ? 'exceeded' : null;
+});
+const budgetExhausted = computed(() => Boolean(budgetState.value));
+const budgetLabel = computed(() =>
+  budgetState.value === 'exceeded' ? 'Orçamento semanal excedido' : 'Orçamento semanal esgotado'
+);
+const weeklyOverrun = computed(() => Math.max(0, -(props.compensation?.remainingWeekBudgetKcal || 0)));
+const budgetHint = computed(() =>
+  budgetState.value === 'exceeded'
+    ? `O saldo semanal já passou ${Math.round(weeklyOverrun.value)} kcal antes de hoje.`
+    : 'O orçamento semanal se encerrou antes de hoje.'
+);
 
 const macroList = computed(() => {
   const map = [
@@ -103,11 +145,16 @@ const macroList = computed(() => {
 
   return map.map((m) => {
     const value = props.totals?.[m.key] || 0;
-    const target = props.targetMacros?.[m.key] || 0;
+    const compensationMacro = props.compensation?.macros?.[m.key];
+    const rawTarget = Number(compensationMacro?.rawDailyTarget ?? props.targetMacros?.[m.key] ?? 0);
+    const target = Math.max(0, rawTarget);
     const base = props.baseMacros?.[m.key] || 0;
     const pct = target ? Math.min(120, (value / target) * 100) : 0;
+    const macroBudgetState = compensationMacro?.budgetState || (rawTarget < 0 ? 'exceeded' : null);
+    const macroBudgetExhausted = Boolean(macroBudgetState);
     const status =
-      !target ? 'sem-meta'
+      macroBudgetExhausted ? 'excedeu'
+        : !target ? 'sem-meta'
         : pct < 90 ? 'faltando'
           : pct <= 110 ? 'ok'
             : 'excedeu';
@@ -115,13 +162,18 @@ const macroList = computed(() => {
       'sem-meta': 'Defina meta',
       'faltando': 'Falta',
       'ok': 'Na meta',
-      'excedeu': 'Excedeu'
+      'excedeu': macroBudgetExhausted
+        ? macroBudgetState === 'exceeded' ? 'Meta semanal excedida' : 'Meta semanal esgotada'
+        : 'Excedeu'
     }[status];
 
     return {
       ...m,
       value,
       target,
+      targetLabel: macroBudgetExhausted
+        ? `Meta semanal de ${m.label.toLowerCase()} ${macroBudgetState === 'exceeded' ? 'excedida' : 'esgotada'}`
+        : target ? `de ${Math.round(target)}g` : '',
       percent: `${pct}%`,
       barClass: status === 'excedeu' ? 'bg-danger' : status === 'faltando' ? 'bg-warn' : '',
       statusClass: `tag-${status}`,
@@ -138,6 +190,11 @@ function calcPercent(val, target) {
   }
   const pct = (val || 0) / target * 100;
   return Math.min(100, pct) + '%'; // Cap at 100 for width, handled differently for markers if needed
+}
+
+function formatSigned(value) {
+  const rounded = Math.round(Number(value || 0));
+  return rounded > 0 ? `+${rounded}` : `${rounded}`;
 }
 </script>
 
@@ -198,6 +255,20 @@ function calcPercent(val, target) {
 .hint {
   color: var(--color-text-muted);
   font-size: 0.9rem;
+}
+
+.compensation-note {
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+  margin: -0.5rem 0 0;
+}
+
+.budget-warning {
+  border: 1px solid var(--color-warning);
+  border-radius: var(--radius-md);
+  color: var(--color-text-main);
+  font-size: 0.9rem;
+  padding: 0.75rem 1rem;
 }
 
 .main-stat {

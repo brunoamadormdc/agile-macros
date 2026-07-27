@@ -16,6 +16,7 @@ const {
   listDateRange,
 } = require("../utils/dates");
 const { calcTotals } = require("../utils/totals");
+const { calculateWeeklyCompensation } = require("../utils/weeklyCompensation");
 const { validateOrThrow } = require("../utils/validation");
 const env = require("../config/env");
 const { requireAuth, JWT_SECRET } = require("../middlewares/auth");
@@ -954,49 +955,18 @@ router.get("/week/summary", requireAuth, async (req, res, next) => {
       kcalSoFar += Number(days[i].kcal || 0);
     }
 
-    // Dynamic Daily Target (Smart Balance)
-    let kcalBeforeToday = 0;
-    for (let i = 0; i < dayIndex; i++) {
-      kcalBeforeToday += Number(days[i].kcal || 0);
-    }
-    const remainingWeekKcal = targetWeek.kcal - kcalBeforeToday;
-    const remainingDays = 7 - dayIndex;
-    const dailyTargetKcal =
-      remainingDays > 0 ? round2(remainingWeekKcal / remainingDays) : 0;
-
-    // Dynamic Daily Macros Target (Smart Balance)
-    let macrosBeforeToday = { protein_g: 0, carbs_g: 0, fat_g: 0 };
-    for (let i = 0; i < dayIndex; i++) {
-      macrosBeforeToday.protein_g += Number(days[i].protein_g || 0);
-      macrosBeforeToday.carbs_g += Number(days[i].carbs_g || 0);
-      macrosBeforeToday.fat_g += Number(days[i].fat_g || 0);
-    }
-
-    // Calculate remaining limits or fallback to average if strategy isn't macro-based
-    const dailyTargetMacros = {};
-    if (targetWeek.protein_g) {
-      const remaining = targetWeek.protein_g - macrosBeforeToday.protein_g;
-      dailyTargetMacros.protein_g =
-        remainingDays > 0 ? round2(remaining / remainingDays) : 0;
-    } else {
-      dailyTargetMacros.protein_g = 0;
-    }
-
-    if (targetWeek.carbs_g) {
-      const remaining = targetWeek.carbs_g - macrosBeforeToday.carbs_g;
-      dailyTargetMacros.carbs_g =
-        remainingDays > 0 ? round2(remaining / remainingDays) : 0;
-    } else {
-      dailyTargetMacros.carbs_g = 0;
-    }
-
-    if (targetWeek.fat_g) {
-      const remaining = targetWeek.fat_g - macrosBeforeToday.fat_g;
-      dailyTargetMacros.fat_g =
-        remainingDays > 0 ? round2(remaining / remainingDays) : 0;
-    } else {
-      dailyTargetMacros.fat_g = 0;
-    }
+    const compensation = calculateWeeklyCompensation({
+      date,
+      days,
+      dayIndex,
+      targetWeek,
+    });
+    const dailyTargetKcal = compensation.rawDailyTargetKcal;
+    const dailyTargetMacros = {
+      protein_g: compensation.macros.protein_g?.rawDailyTarget || 0,
+      carbs_g: compensation.macros.carbs_g?.rawDailyTarget || 0,
+      fat_g: compensation.macros.fat_g?.rawDailyTarget || 0,
+    };
 
     const avgPerDaySoFar = daysSoFar ? round2(kcalSoFar / daysSoFar) : 0;
     const projectedWeekKcal = round2(avgPerDaySoFar * 7);
@@ -1009,6 +979,7 @@ router.get("/week/summary", requireAuth, async (req, res, next) => {
       targetWeek,
       balance,
       status,
+      compensation,
       dailyTargetKcal, // New field for frontend (adjusted)
       baseDailyKcal: round2(targetWeek.kcal / 7), // Explicit base for UI reference
       dailyTargetMacros, // New field for frontend

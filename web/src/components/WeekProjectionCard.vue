@@ -42,18 +42,20 @@
         </div>
 
         <div class="summary-card">
-          <p class="label">Para fechar a meta</p>
+          <p class="label">Meta ajustada de hoje</p>
           <div class="value-wrapper">
             <div :class="{ 'blur-container': isRestricted }">
-              <span class="medium-number">
-                {{ remainingPerDay.toFixed(0) }}
+              <span v-if="budgetExhausted" class="medium-number">—</span>
+              <span v-else class="medium-number">
+                {{ practicalDailyTarget.toFixed(0) }}
               </span>
-              <span class="unit">kcal / dia</span>
+              <span class="unit">{{ budgetExhausted ? budgetLabel : 'kcal / dia' }}</span>
             </div>
             <button v-if="isRestricted" class="lock-btn" @click="openUpgrade">🔒</button>
           </div>
           <p class="sub-text">
-            Considerando {{ remainingDays }} dia<span v-if="remainingDays !== 1">s</span> restante<span v-if="remainingDays !== 1">s</span>.
+            <template v-if="budgetExhausted">{{ budgetHint }}</template>
+            <template v-else>Redistribuída em {{ daysToDistribute }} dia<span v-if="daysToDistribute !== 1">s</span> até domingo.</template>
           </p>
         </div>
       </div>
@@ -94,15 +96,21 @@
           </div>
         </div>
 
-        <div v-if="remainingDays > 0" class="smart-redistribution">
-          <p class="label">Sugestão para ajustar</p>
+        <div class="smart-redistribution" aria-live="polite">
+          <p class="label">Compensação de hoje</p>
           <div class="value-wrapper center">
-            <span class="big-number highlight">
-              {{ Math.max(0, remainingPerDay).toFixed(0) }}
+            <span v-if="budgetExhausted" class="big-number highlight">—</span>
+            <span v-else class="big-number highlight">
+              {{ practicalDailyTarget.toFixed(0) }}
             </span>
-            <span class="unit">kcal / dia</span>
+            <span class="unit">{{ budgetExhausted ? 'sem meta diária a distribuir' : 'kcal / dia' }}</span>
           </div>
-          <p class="sub-text">Consuma cerca disso nos próximos dias para ficar na meta.</p>
+          <p v-if="budgetExhausted" class="sub-text text-danger">
+            {{ budgetHint }} Continue registrando; não faça restrições extremas para compensar.
+          </p>
+          <p v-else class="sub-text">
+            {{ compensationAdjustmentText }} Meta para hoje: {{ practicalDailyTarget.toFixed(0) }} kcal.
+          </p>
         </div>
       </div>
 
@@ -172,11 +180,31 @@ const avgKcal = computed(() => totalKcal.value / 7);
 const balanceKcal = computed(() => props.weekSummary.balance?.kcal ?? 0);
 const projectedTotal = computed(() => props.weekSummary.projection?.projectedWeekKcal ?? 0);
 const projectedBalance = computed(() => props.weekSummary.projection?.projectedBalanceKcal ?? 0);
-const remainingDays = computed(() => props.weekSummary.projection?.remainingDays ?? 0);
-const remainingPerDay = computed(() => {
-  if (!remainingDays.value) return 0;
-  const val = (props.weekSummary.balance?.kcal ?? 0) / remainingDays.value * -1;
-  return Math.max(0, val);
+const compensation = computed(() => props.weekSummary.compensation || null);
+const daysToDistribute = computed(() => compensation.value?.daysToDistribute ?? 0);
+const rawDailyTarget = computed(() => compensation.value?.rawDailyTargetKcal ?? props.weekSummary.dailyTargetKcal ?? 0);
+const practicalDailyTarget = computed(() => Math.max(0, rawDailyTarget.value));
+const budgetState = computed(() => {
+  if (compensation.value?.budgetState) return compensation.value.budgetState;
+  if (compensation.value?.status === 'weekly_budget_exhausted') {
+    return compensation.value.remainingWeekBudgetKcal < 0 ? 'exceeded' : 'depleted';
+  }
+  return rawDailyTarget.value < 0 ? 'exceeded' : null;
+});
+const budgetExhausted = computed(() => Boolean(budgetState.value));
+const budgetLabel = computed(() =>
+  budgetState.value === 'exceeded' ? 'orçamento excedido' : 'orçamento esgotado'
+);
+const budgetHint = computed(() =>
+  budgetState.value === 'exceeded'
+    ? `O orçamento semanal foi ultrapassado em ${Math.abs(Math.round(compensation.value?.remainingWeekBudgetKcal ?? 0))} kcal.`
+    : 'O orçamento semanal se encerrou antes de hoje.'
+);
+const compensationAdjustment = computed(() => compensation.value?.dailyAdjustmentKcal ?? (rawDailyTarget.value - (props.weekSummary.baseDailyKcal ?? 0)));
+const compensationAdjustmentText = computed(() => {
+  const amount = Math.round(compensationAdjustment.value);
+  if (Math.abs(amount) < 1) return 'A meta base foi mantida.';
+  return `Ajuste pelo saldo semanal: ${formatSigned(amount)} kcal em relação à base.`;
 });
 
 const showKcalWarning = computed(() =>
