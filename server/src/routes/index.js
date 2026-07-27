@@ -44,6 +44,49 @@ function normalizeNumber(value) {
   return numberValue;
 }
 
+function escapeRegex(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function getSearchRelevance(name, query) {
+  const normalizedName = name.trim().toLocaleLowerCase("pt-BR");
+  const normalizedQuery = query.trim().toLocaleLowerCase("pt-BR");
+
+  if (normalizedName === normalizedQuery) return 0;
+  if (normalizedName.startsWith(normalizedQuery)) return 1;
+  if (new RegExp(`\\b${escapeRegex(normalizedQuery)}`, "i").test(normalizedName)) {
+    return 2;
+  }
+  return 3;
+}
+
+function saveManualFoodInCatalog(item) {
+  const name = item.label.trim();
+
+  // This is intentionally non-blocking: adding food to the diary must not
+  // depend on maintaining the shared autocomplete catalog.
+  void (async () => {
+    const existing = await FoodItem.findOne({ name }).collation({
+      locale: "pt",
+      strength: 1,
+    });
+
+    if (existing) return;
+
+    await FoodItem.create({
+      name,
+      calories: item.kcal,
+      protein: item.protein_g,
+      carbs: item.carbs_g,
+      fat: item.fat_g,
+      portion: item.qty,
+      source: "manual",
+    });
+  })().catch((error) => {
+    console.error("Unable to save manual food in catalog", error);
+  });
+}
+
 const authSchema = z.object({
   email: z.string().email(),
   password: z
@@ -387,12 +430,24 @@ router.get("/food-items/search", requireAuth, async (req, res, next) => {
       return res.json({ items: [] });
     }
 
-    // Search case insensitive
-    const items = await FoodItem.find({
-      name: { $regex: q, $options: "i" },
-    }).limit(20);
+    const query = q.trim();
+    if (query.length < 2) {
+      return res.json({ items: [] });
+    }
 
-    return res.json({ items });
+    const items = await FoodItem.find({
+      name: { $regex: escapeRegex(query), $options: "i" },
+    });
+
+    items.sort((first, second) => {
+      const relevance =
+        getSearchRelevance(first.name, query) -
+        getSearchRelevance(second.name, query);
+
+      return relevance || first.name.localeCompare(second.name, "pt-BR");
+    });
+
+    return res.json({ items: items.slice(0, 40) });
   } catch (error) {
     return next(error);
   }
@@ -569,6 +624,10 @@ router.post("/diary/:date/items", async (req, res, next) => {
     entry.items.push(newItem);
     entry.totals = calcTotals(entry.items);
     await entry.save();
+
+    if (newItem.source === "manual") {
+      saveManualFoodInCatalog(newItem);
+    }
 
     return res.json(entry);
   } catch (error) {
