@@ -1,5 +1,5 @@
 <template>
-  <section class="card daily-card">
+  <section class="daily-card">
     <div class="card-header">
       <h2>Totais do dia</h2>
     </div>
@@ -493,10 +493,36 @@ function formatSigned(value) {
 }
 
 @media (max-width: 640px) {
-  .macros-grid {
-    grid-template-columns: repeat(2, 1fr);
+  .content {
+    gap: 1rem;
   }
 
+  .big-number {
+    font-size: 2.75rem;
+  }
+
+  .unit-label {
+    font-size: 1rem;
+  }
+
+  .macros-grid {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  .macro-cell {
+    padding: 0.625rem;
+  }
+
+  .macro-top {
+    align-items: flex-start;
+  }
+
+  .macro-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
   .value-wrapper {
     flex-direction: column;
     align-items: flex-start;
@@ -505,6 +531,11 @@ function formatSigned(value) {
 
   .macro-target {
     font-size: 0.75rem;
+  }
+
+  .remaining-text {
+    flex-direction: column;
+    gap: 0.25rem;
   }
 }
 </style>

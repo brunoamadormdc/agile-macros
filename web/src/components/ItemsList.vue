@@ -1,5 +1,5 @@
 <template>
-  <section class="card">
+  <section class="items-list-panel">
     <h2>Itens do dia</h2>
     <div v-if="!items.length" class="empty-state">
       <p>Nenhum item hoje.</p>
@@ -243,8 +243,13 @@ function saveEdit(index) {
 </script>
 
 <style scoped>
+.items-list-panel > h2 {
+  margin: 0 0 1rem;
+  font-size: 1.125rem;
+}
+
 .meal-group {
-  margin-bottom: 2rem;
+  margin-bottom: 1.25rem;
 }
 
 .meal-header {
@@ -469,31 +474,101 @@ function saveEdit(index) {
 }
 
 @media (max-width: 640px) {
+  .items-list-panel > h2 {
+    margin-bottom: 0.75rem;
+    font-size: 1rem;
+  }
+
+  .meal-group {
+    margin-bottom: 1rem;
+  }
+
   .meal-header {
-    align-items: flex-start;
+    gap: 0.625rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .meal-header h3 {
+    font-size: 1rem;
   }
 
   .meal-totals {
-    width: 100%;
-    justify-content: flex-start;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.375rem;
   }
 
-  .food-card {
-    padding: 0.875rem;
+  .meal-totals .macro-chip,
+  .macro-badges .macro-chip {
+    min-width: 0;
+    padding: 0.3rem 0.25rem;
+    gap: 0.125rem;
+    font-size: 0.7rem;
   }
 
-  .item-meta {
+  .meal-totals .macro-chip small,
+  .macro-badges .macro-chip small {
+    font-size: 0.65rem;
+  }
+
+  .items-list {
     gap: 0.5rem;
   }
 
-  .macro-chip {
-    font-size: 0.78rem;
-    padding: 0.35rem 0.55rem;
+  .food-card {
+    padding: 0.75rem;
+  }
+
+  .food-card-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.5rem;
+  }
+
+  .item-info {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .item-title {
+    font-size: 0.95rem;
+  }
+
+  .item-meta {
+    display: contents;
+  }
+
+  .macro-badges {
+    display: grid;
+    grid-column: 1 / -1;
+    grid-row: 2;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.35rem;
+  }
+
+  .item-actions {
+    grid-column: 2;
+    grid-row: 1;
+    gap: 0.25rem;
+    order: initial;
   }
 
   .btn-icon {
-    padding: 6px;
-    min-width: 36px;
+    min-width: 30px;
+    padding: 5px;
+    font-size: 0.875rem;
+  }
+
+  .grid-4-mini {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .edit-actions {
+    justify-content: stretch;
+  }
+
+  .edit-actions .btn {
+    flex: 1;
   }
 }
 </style>

@@ -118,36 +118,37 @@ const weekDays = computed(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1rem;
-  margin-bottom: 2rem;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
 }
 
 .date-header {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0.5rem;
+  min-height: 40px;
   cursor: pointer;
-  padding: 0.5rem 1rem;
-  border-radius: 12px;
+  padding: 0.375rem 0.5rem;
+  border-radius: var(--radius-md);
   transition: background 0.2s;
   position: relative;
 }
 
 .date-header:hover {
-  background: var(--color-bg-hover, rgba(0, 0, 0, 0.05));
+  background: var(--color-bg-body);
 }
 
 .current-date-text {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--color-text-main);
   margin: 0;
+  font-size: 1rem;
+  font-weight: 650;
+  color: var(--color-text-main);
   text-transform: capitalize;
 }
 
 .edit-icon {
-  font-size: 1.2rem;
-  opacity: 0.7;
+  font-size: 1rem;
+  opacity: 0.65;
 }
 
 .hidden-picker {
@@ -166,37 +167,32 @@ const weekDays = computed(() => {
   justify-content: space-between;
   width: 100%;
   max-width: 500px;
-  /* Optional: cap width so bubbles don't get huge on desktop */
-  padding: 0.25rem;
+  padding: 0;
 }
 
 .day-bubble {
   display: flex;
+  flex: 1;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  flex: 1;
-  /* Occupy available space */
-  max-width: 60px;
-  /* Cap per-bubble width */
-  height: 64px;
-  /* Slightly taller */
-  border-radius: 16px;
-  /* Slightly squarer for wider bubbles */
+  max-width: 52px;
+  height: 48px;
   border: 1px solid transparent;
+  border-radius: 12px;
   background: transparent;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background-color 0.2s, color 0.2s;
 }
 
 .day-bubble:hover {
-  background: var(--color-bg-hover);
+  background: var(--color-bg-body);
 }
 
 .day-bubble.active {
   background: var(--color-primary);
   color: white;
-  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+  box-shadow: none;
 }
 
 .day-bubble:not(.active) {
@@ -204,23 +200,57 @@ const weekDays = computed(() => {
 }
 
 .day-bubble.today:not(.active) {
-  border-color: var(--color-primary);
+  background: var(--color-primary-light);
   color: var(--color-primary);
 }
 
 .weekday {
-  font-size: 0.75rem;
-  opacity: 0.8;
-  margin-bottom: 2px;
+  margin-bottom: 1px;
+  font-size: 0.65rem;
+  opacity: 0.75;
 }
 
 .day-num {
-  font-size: 1.1rem;
+  font-size: 0.95rem;
   font-weight: 700;
 }
 
 /* Hide scrollbar */
 .week-strip::-webkit-scrollbar {
   display: none;
+}
+
+@media (max-width: 640px) {
+  .date-picker-wrapper {
+    gap: 0.375rem;
+    margin-bottom: 1rem;
+  }
+
+  .date-header {
+    min-height: 36px;
+    padding: 0.25rem 0.375rem;
+  }
+
+  .current-date-text {
+    font-size: 0.9rem;
+  }
+
+  .edit-icon {
+    font-size: 0.9rem;
+  }
+
+  .day-bubble {
+    max-width: 42px;
+    height: 42px;
+    border-radius: 10px;
+  }
+
+  .weekday {
+    font-size: 0.6rem;
+  }
+
+  .day-num {
+    font-size: 0.9rem;
+  }
 }
 </style>

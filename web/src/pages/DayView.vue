@@ -78,7 +78,7 @@
         </div>
 
         <!-- Add Section -->
-        <div v-show="mainTab === 'add'" style="margin-top: 2rem;">
+        <div v-show="mainTab === 'add'" style="margin-top: 1rem;">
           <AddFoodForm :loading="diaryStore.loading" @add="handleAdd" />
         </div>
 
@@ -465,7 +465,7 @@ watch(
   min-width: 180px;
 }
 
-@media (max-width: 800px) {
+@media (min-width: 641px) and (max-width: 800px) {
   .copy-grid {
     grid-template-columns: 1fr;
   }
@@ -481,27 +481,26 @@ watch(
 
 .scrollable-tabs {
   width: 100%;
-  overflow-x: auto;
-  padding: 0.35rem;
-  gap: 0.5rem;
+  padding: 0.25rem;
+  gap: 0.25rem;
   background: var(--color-bg-body);
-  border-radius: var(--radius-full);
-}
-
-.scrollable-tabs::-webkit-scrollbar {
-  height: 6px;
-}
-
-.scrollable-tabs::-webkit-scrollbar-thumb {
-  background: var(--color-border-hover);
-  border-radius: 999px;
+  border-radius: var(--radius-sm);
 }
 
 .scrollable-tabs .tab {
-  white-space: nowrap;
-  flex: 1;
-  min-width: 140px;
+  flex: 1 1 0;
+  min-width: 0;
   text-align: center;
+}
+
+@media (min-width: 960px) {
+  .scrollable-tabs {
+    width: fit-content;
+  }
+
+  .scrollable-tabs .tab {
+    flex: 0 0 auto;
+  }
 }
 
 @media (min-width: 960px) {
@@ -593,5 +592,96 @@ watch(
 .item-info small {
   color: var(--color-text-muted);
   font-size: 0.8rem;
+}
+
+@media (max-width: 640px) {
+  .copy-panel {
+    margin-top: 0.75rem;
+  }
+
+  .copy-body {
+    gap: 0.875rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+
+  .copy-head {
+    gap: 0.5rem;
+  }
+
+  .copy-head h2 {
+    margin-bottom: 0.375rem;
+    font-size: 1.125rem;
+  }
+
+  .copy-head .muted {
+    font-size: 0.8125rem;
+    line-height: 1.45;
+  }
+
+  .chip.subtle {
+    padding: 0.375rem 0.625rem;
+    font-size: 0.75rem;
+  }
+
+  .selection-header {
+    padding: 0.625rem 0.75rem;
+  }
+
+  .selection-title {
+    font-size: 0.75rem;
+  }
+
+  .selection-controls {
+    gap: 0.75rem;
+  }
+
+  .copy-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.625rem;
+  }
+
+  .copy-grid :deep(.date-picker-input) {
+    gap: 0.25rem;
+  }
+
+  .copy-grid :deep(.date-picker-input .label) {
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  .copy-grid :deep(.input-display) {
+    min-height: 44px;
+    padding: 0.5rem 0.625rem;
+    border-radius: 10px;
+  }
+
+  .copy-grid :deep(.date-text) {
+    font-size: 0.8125rem;
+  }
+
+  .copy-grid :deep(.icon) {
+    font-size: 1rem;
+  }
+
+  .copy-check {
+    margin-top: 0;
+    font-size: 0.875rem;
+  }
+
+  .copy-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.625rem;
+  }
+
+  .copy-actions .btn,
+  .copy-actions .btn.primary {
+    width: auto;
+    min-width: 0;
+    margin-top: 0;
+    padding-inline: 0.5rem;
+  }
 }
 </style>

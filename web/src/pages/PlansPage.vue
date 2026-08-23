@@ -57,7 +57,7 @@ function goToDiary() {
 
 .plans-container {
     display: grid;
-    grid-template-columns: minmax(280px, 560px);
+    grid-template-columns: minmax(0, 560px);
     gap: 2rem;
     max-width: 1200px;
     margin: 0 auto;
@@ -133,5 +133,29 @@ function goToDiary() {
 
 .full-width {
     width: 100%;
+}
+
+@media (max-width: 640px) {
+    .header-center {
+        margin-bottom: 1.5rem;
+    }
+
+    .subtitle {
+        font-size: 1rem;
+    }
+
+    .plan-card {
+        padding: 1.25rem;
+        border-radius: var(--radius-lg);
+        gap: 1rem;
+    }
+
+    .amount {
+        font-size: 2.5rem;
+    }
+
+    .features-list {
+        gap: 0.75rem;
+    }
 }
 </style>

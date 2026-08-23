@@ -643,4 +643,37 @@ function formatSigned(v) {
   margin-top: 0.75rem;
   margin-bottom: 0.35rem;
 }
+
+@media (max-width: 640px) {
+  .content {
+    gap: 1rem;
+  }
+
+  .summary-grid,
+  .projection-grid {
+    gap: 0.75rem;
+  }
+
+  .summary-card,
+  .macro-cell {
+    padding: 0.75rem;
+  }
+
+  .stats-row {
+    gap: 0.75rem;
+  }
+
+  .big-number {
+    font-size: 1.75rem;
+  }
+
+  .big-number.highlight {
+    font-size: 2rem;
+  }
+
+  .macros-grid {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+}
 </style>

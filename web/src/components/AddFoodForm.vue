@@ -88,21 +88,22 @@
 
           <label class="field">
             Quantidade Consumida (g)
-            <input v-model.number="popupQty" type="number" min="1" step="0.1" ref="popupInputRef" />
+            <input v-model.number="popupQty" type="number" min="1" step="0.001" ref="popupInputRef"
+              @change="normalizePopupQuantity" />
           </label>
 
           <div class="calculated-preview">
             <strong>Calculado:</strong>
-            <span>{{ (selectedItem.calories * popupQty / 100).toFixed(1) }} kcal</span>
-            <span>P: {{ (selectedItem.protein * popupQty / 100).toFixed(1) }}g</span>
-            <span>C: {{ (selectedItem.carbs * popupQty / 100).toFixed(1) }}g</span>
-            <span>G: {{ (selectedItem.fat * popupQty / 100).toFixed(1) }}g</span>
+            <span>{{ formatNumber(selectedItem.calories * popupQty / 100) }} kcal</span>
+            <span>P: {{ formatNumber(selectedItem.protein * popupQty / 100) }}g</span>
+            <span>C: {{ formatNumber(selectedItem.carbs * popupQty / 100) }}g</span>
+            <span>G: {{ formatNumber(selectedItem.fat * popupQty / 100) }}g</span>
           </div>
 
-          <button class="btn full-width" @click="confirmPopup">
+        </div>
+          <button class="btn full-width modal-submit" @click="confirmPopup">
             Confirmar
           </button>
-        </div>
       </div>
     </div>
 
@@ -164,6 +165,20 @@ const showPopup = ref(false);
 const selectedItem = ref(null); // The raw item from database
 const popupQty = ref(100);
 
+const numberFormatter = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 3 });
+
+function roundToThree(value) {
+  return Math.round((Number(value) + Number.EPSILON) * 1000) / 1000;
+}
+
+function formatNumber(value) {
+  return numberFormatter.format(roundToThree(value));
+}
+
+function normalizePopupQuantity() {
+  popupQty.value = roundToThree(popupQty.value);
+}
+
 const canAddManual = computed(() => {
   return (
     manual.value.label &&
@@ -200,17 +215,20 @@ function selectFoodItem(item) {
 function confirmPopup() {
   if (!selectedItem.value) return;
 
-  // Calculate values based on popupQty
-  const factor = popupQty.value / 100;
+  const quantity = roundToThree(popupQty.value);
+  if (!Number.isFinite(quantity) || quantity < 1) return;
+
+  popupQty.value = quantity;
+  const factor = quantity / 100;
 
   manual.value.label = selectedItem.value.name;
-  manual.value.qty = popupQty.value;
+  manual.value.qty = quantity;
   manual.value.unit = 'g';
   manual.value.macros = {
-    kcal: Number((selectedItem.value.calories * factor).toFixed(1)),
-    protein_g: Number((selectedItem.value.protein * factor).toFixed(1)),
-    carbs_g: Number((selectedItem.value.carbs * factor).toFixed(1)),
-    fat_g: Number((selectedItem.value.fat * factor).toFixed(1)),
+    kcal: roundToThree(selectedItem.value.calories * factor),
+    protein_g: roundToThree(selectedItem.value.protein * factor),
+    carbs_g: roundToThree(selectedItem.value.carbs * factor),
+    fat_g: roundToThree(selectedItem.value.fat * factor),
   };
 
   // Store current base item to allow recalculation if user changes quantity in main form
@@ -227,10 +245,10 @@ function recalcIfBasedOnItem() {
   if (manual.value._baseItem && manual.value.unit === 'g') {
     const factor = manual.value.qty / 100;
     const base = manual.value._baseItem;
-    manual.value.macros.kcal = Number((base.calories * factor).toFixed(1));
-    manual.value.macros.protein_g = Number((base.protein * factor).toFixed(1));
-    manual.value.macros.carbs_g = Number((base.carbs * factor).toFixed(1));
-    manual.value.macros.fat_g = Number((base.fat * factor).toFixed(1));
+    manual.value.macros.kcal = roundToThree(base.calories * factor);
+    manual.value.macros.protein_g = roundToThree(base.protein * factor);
+    manual.value.macros.carbs_g = roundToThree(base.carbs * factor);
+    manual.value.macros.fat_g = roundToThree(base.fat * factor);
   }
 }
 
@@ -309,8 +327,8 @@ function submitManual() {
 .meal-pill {
   background: color-mix(in srgb, var(--color-bg-body) 80%, transparent);
   border: 1px solid var(--color-border);
-  border-radius: 999px;
-  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
   font-size: 0.9rem;
   color: var(--color-text-main);
   cursor: pointer;
@@ -472,16 +490,48 @@ function submitManual() {
 }
 
 @media (max-width: 640px) {
+  .panel {
+    padding: 0;
+    border: 0;
+    box-shadow: none;
+    background: transparent;
+  }
+
+  .tab-panel {
+    gap: 0.75rem;
+  }
+
+  .add-form .field {
+    gap: 0.25rem;
+    font-size: 0.875rem;
+  }
+
+  .search-wrapper {
+    margin-bottom: 0;
+  }
+
   .qty-grid {
     grid-template-columns: 1fr;
   }
 
   .grid-macros {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
   }
 
   .meal-selector {
-    margin-top: 0.25rem;
+    margin: 0;
+    padding-bottom: 0.25rem;
+    scrollbar-width: none;
+  }
+
+  .meal-selector::-webkit-scrollbar {
+    display: none;
+  }
+
+  .meal-pill {
+    min-height: 40px;
+    padding: 0.5rem 0.75rem;
   }
 
   .file-block {
@@ -612,6 +662,63 @@ function submitManual() {
 
   100% {
     box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
+}
+
+@media (max-width: 640px) {
+  .modal-overlay {
+    z-index: 1100;
+    align-items: flex-end;
+  }
+
+  .modal {
+    width: 100%;
+    max-width: none;
+    max-height: 85dvh;
+    overflow: hidden;
+    padding: 0;
+    border-radius: 16px 16px 0 0;
+  }
+
+  .modal-header {
+    flex-shrink: 0;
+    margin-bottom: 0.75rem;
+    padding: 1rem 1rem 0;
+  }
+
+  .modal-body {
+    min-height: 0;
+    overflow-y: auto;
+    padding: 0 1rem 1rem;
+  }
+
+  .base-info {
+    flex-wrap: wrap;
+    gap: 0.375rem 0.75rem;
+    font-size: 0.8125rem;
+  }
+
+  .separator {
+    margin: 0.75rem 0;
+  }
+
+  .modal .field {
+    gap: 0.25rem;
+    font-size: 0.875rem;
+  }
+
+  .calculated-preview {
+    margin: 0.75rem 0;
+    padding: 0.625rem;
+    font-size: 0.8125rem;
+  }
+
+  .modal-submit {
+    width: 100%;
+    min-height: 44px;
+    flex-shrink: 0;
+    margin: 0;
+    border-radius: 0;
   }
 }
 </style>

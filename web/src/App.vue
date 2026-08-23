@@ -50,7 +50,7 @@
           <circle cx="17" cy="13" r="1.1" />
           <circle cx="9" cy="17" r="1.1" />
         </svg>
-        <span class="label">Hoje</span>
+        <span class="nav-label">Hoje</span>
       </RouterLink>
       <RouterLink to="/week" class="nav-item">
         <svg class="nav-svg" viewBox="0 0 24 24" aria-hidden="true">
@@ -58,7 +58,7 @@
           <rect x="10.25" y="8" width="3.5" height="11" rx="1" />
           <rect x="15.5" y="5" width="3.5" height="14" rx="1" />
         </svg>
-        <span class="label">Semana</span>
+        <span class="nav-label">Semana</span>
       </RouterLink>
       <RouterLink to="/calculator" class="nav-item">
         <svg class="nav-svg" viewBox="0 0 24 24" aria-hidden="true">
@@ -69,7 +69,7 @@
           <circle cx="10" cy="17" r="0.9" />
           <circle cx="14" cy="17" r="0.9" />
         </svg>
-        <span class="label">Calculadora</span>
+        <span class="nav-label">Calculadora</span>
       </RouterLink>
     </nav>
   </div>
@@ -122,40 +122,39 @@ function logout() {
   position: fixed;
   bottom: 0;
   left: 0;
-  width: 100%;
-  height: 68px;
-  background: var(--color-bg-card);
-  background: color-mix(in srgb, var(--color-bg-card) 92%, transparent);
-  backdrop-filter: blur(10px);
-  border-top: 1px solid var(--color-border);
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
   z-index: 1000;
-  box-shadow: 0 -6px 30px rgba(0, 0, 0, 0.12);
-  padding: 6px clamp(12px, 3vw, 20px) env(safe-area-inset-bottom, 0);
-  gap: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  width: 100%;
+  height: 64px;
+  gap: 0.25rem;
+  padding: 4px clamp(12px, 3vw, 20px) env(safe-area-inset-bottom, 0);
+  background: color-mix(in srgb, var(--color-bg-card) 96%, transparent);
+  border-top: 1px solid var(--color-border);
+  box-shadow: 0 -2px 10px rgb(0 0 0 / 0.06);
+  backdrop-filter: blur(10px);
 }
 
 /* Nav Items */
 .nav-item {
+  position: relative;
   display: inline-flex;
+  flex: 1;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  text-decoration: none;
-  color: var(--color-text-muted);
-  font-size: 0.72rem;
-  letter-spacing: 0.02em;
-  font-weight: 600;
-  gap: 6px;
-  flex: 1;
   min-width: 0;
   height: 100%;
-  padding: 6px 8px;
-  border-radius: 14px;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
+  gap: 3px;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-decoration: none;
+  transition: color 0.2s, background-color 0.2s;
 }
 
 .nav-item:hover {
@@ -171,6 +170,12 @@ function logout() {
   stroke-width: 1.6;
   opacity: 0.7;
   transition: all 0.2s ease;
+}
+
+.nav-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  line-height: 1.2;
 }
 
 /* Active State */
@@ -237,7 +242,7 @@ function logout() {
 }
 
 .app-logo {
-  width: 300px;
+  width: min(300px, 42vw);
   height: auto;
 }
 
@@ -269,6 +274,44 @@ function logout() {
 
   100% {
     box-shadow: 0 0 0 0 rgba(251, 146, 60, 0);
+  }
+}
+
+@media (max-width: 640px) {
+  .app {
+    padding-bottom: calc(66px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .app-logo {
+    width: min(170px, 46vw);
+  }
+
+  .header-actions .btn.small {
+    min-width: 40px;
+    padding: 0.375rem 0.5rem;
+  }
+
+  .bottom-nav {
+    height: calc(56px + env(safe-area-inset-bottom, 0px));
+    padding: 3px 10px calc(3px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .nav-svg {
+    width: 19px;
+    height: 19px;
+  }
+
+  .nav-label {
+    font-size: 0.625rem;
+  }
+
+  .streak-badge {
+    padding: 0.45rem;
+    font-size: 0;
+  }
+
+  .streak-badge::first-letter {
+    font-size: 1rem;
   }
 }
 </style>

@@ -151,8 +151,8 @@
                             </p>
                         </div>
 
-                        <button class="btn full-width primary-action" @click="applyTarget">
-                            Salvar Meta no Meu Plano
+                        <button class="btn primary-action" @click="applyTarget">
+                            Salvar meta
                         </button>
                     </div>
 
@@ -424,8 +424,9 @@ async function applyTarget() {
 }
 
 .primary-action {
-    font-size: 1rem;
-    padding: 1rem;
+    margin-top: 0.75rem;
+    padding: 0.625rem 1rem;
+    font-size: 0.875rem;
 }
 
 @media (max-width: 768px) {
@@ -494,5 +495,92 @@ async function applyTarget() {
     /* Or similar color */
     margin-top: 0.5rem;
     font-weight: 500;
+}
+
+@media (max-width: 640px) {
+    .header {
+        margin-bottom: 0.75rem;
+    }
+
+    .radio-group,
+    .macro-inputs {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.5rem;
+    }
+
+    .radio-card {
+        padding: 0.625rem;
+        font-size: 0.875rem;
+    }
+
+    .results-card h2,
+    .results-card h3 {
+        margin-bottom: 0.625rem;
+        font-size: 1rem;
+    }
+
+    .stat-row,
+    .stat-row.highlight {
+        margin-bottom: 0.375rem;
+        font-size: 0.8125rem;
+    }
+
+    .goals-grid {
+        gap: 0.375rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .goal-btn {
+        min-height: 52px;
+        padding: 0.5rem 0.25rem;
+    }
+
+    .goal-btn span {
+        font-size: 0.75rem;
+    }
+
+    .goal-btn small {
+        font-size: 0.625rem;
+    }
+
+    .target-display {
+        margin-bottom: 0.75rem;
+        padding: 0.75rem;
+        border-radius: var(--radius-sm);
+    }
+
+    .target-display p {
+        font-size: 0.75rem;
+    }
+
+    .big-number {
+        margin: 0.25rem 0;
+        font-size: 2rem;
+    }
+
+    .divider {
+        margin: 0.75rem 0;
+    }
+
+    .macro-input-group label,
+    .input-with-result span {
+        font-size: 0.7rem;
+    }
+
+    .input-with-result input {
+        min-height: 36px;
+        padding: 0.375rem;
+    }
+
+    .summary-total {
+        margin-bottom: 0.75rem;
+    }
+
+    .primary-action {
+        min-height: 40px;
+        margin-top: 0.5rem;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.8125rem;
+    }
 }
 </style>

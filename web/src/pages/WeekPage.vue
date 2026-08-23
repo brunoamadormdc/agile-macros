@@ -35,7 +35,7 @@
             Defina suas metas <strong>diárias</strong> de macronutrientes. O sistema calculará a meta calórica semanal
             automaticamente.
           </p>
-          <div class="grid-2" style="grid-template-columns: repeat(3, 1fr);">
+          <div class="grid-2 macro-target-grid">
             <label class="field">
               Proteína (g)
               <input v-model.number="targetProtein" type="number" min="0" />
@@ -49,9 +49,9 @@
               <input v-model.number="targetFat" type="number" min="0" />
             </label>
           </div>
-          <div class="card" style="background: var(--color-bg-body); border: none; margin-top: 1rem; padding: 1rem;">
-            <p style="margin: 0; font-size: 0.9rem; color: var(--color-text-muted);">Estimativa:</p>
-            <div style="display: flex; gap: 1rem; margin-top: 0.25rem;">
+          <div class="card target-estimate">
+            <p>Estimativa:</p>
+            <div>
               <div><strong>{{ calculatedDailyKcal.toFixed(0) }}</strong> kcal/dia</div>
               <div><strong>{{ (calculatedDailyKcal * 7).toFixed(0) }}</strong> kcal/semana</div>
             </div>
@@ -161,3 +161,24 @@ async function saveTarget() {
   }
 }
 </script>
+
+<style scoped>
+@media (max-width: 640px) {
+  .macro-target-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .target-estimate {
+    padding: 0.75rem;
+    margin-top: 0.75rem;
+    background: var(--color-bg-body);
+    border: 0;
+  }
+
+  .target-estimate > div {
+    display: grid;
+    gap: 0.25rem;
+    margin-top: 0.25rem;
+  }
+}
+</style>
